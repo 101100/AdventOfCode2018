@@ -83,10 +83,10 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        public static IEnumerable<T> Repeat<T>(this IEnumerable<T> input, int repetitions)
+        public static IEnumerable<T> Repeat<T>(this IEnumerable<T> input, int? repetitions = null)
         {
             return Enumerable
-                .Range(0, repetitions)
+                .Range(0, repetitions ?? int.MaxValue)
                 .SelectMany(_ => input);
         }
 

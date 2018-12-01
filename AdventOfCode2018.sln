@@ -1,0 +1,40 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.0.0
+MinimumVisualStudioVersion = 10.0.0.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdventOfCode2018.CSharp", "CSharp\AdventOfCode2018.CSharp.csproj", "{5F11771C-0820-413D-BD78-1CB3A5F90A92}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AdventOfCode2018.FSharp", "FSharp\AdventOfCode2018.FSharp.fsproj", "{3205985A-085E-4EEC-AF67-165079E4659F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5F11771C-0820-413D-BD78-1CB3A5F90A92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F11771C-0820-413D-BD78-1CB3A5F90A92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F11771C-0820-413D-BD78-1CB3A5F90A92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F11771C-0820-413D-BD78-1CB3A5F90A92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Debug|x64.ActiveCfg = Debug|x64
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Debug|x64.Build.0 = Debug|x64
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Debug|x86.ActiveCfg = Debug|x86
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Debug|x86.Build.0 = Debug|x86
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Release|x64.ActiveCfg = Release|x64
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Release|x64.Build.0 = Release|x64
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Release|x86.ActiveCfg = Release|x86
+		{3205985A-085E-4EEC-AF67-165079E4659F}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

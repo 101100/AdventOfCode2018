@@ -22,4 +22,4 @@ To run the project:
 
 1. Install .NET Core.
 1. Download the code.
-1. Run `dotnet run <day>`.
+1. Run `run <day>`.

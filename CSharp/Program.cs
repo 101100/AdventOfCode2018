@@ -30,8 +30,8 @@ namespace AdventOfCode2018.CSharp
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day1Part1(input)}");
                 Console.WriteLine($"Part 1 (F#): {Day1.part1(input)}");
-                // Console.WriteLine($"Part 2 (C#): {Program.Day1Part2(input)}");
-                // Console.WriteLine($"Part 2 (F#): {Day1.part2(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day1Part2(input)}");
+                Console.WriteLine($"Part 2 (F#): {Day1.part2(input)}");
             }
             else
             {
@@ -47,17 +47,36 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        private static int? GetIntInput(string[] args)
+        private static int Day1Part1(string input)
         {
-            return args.Length >= 2
-                ? int.Parse(args[1])
-                : default(int?);
+            return input
+                .SelectLines()
+                .Select(int.Parse)
+                .Sum();
         }
 
 
-        private static string Day1Part1(string input)
+        private static int Day1Part2(string input)
         {
-            return "output";
+            var rawInput = input
+                .SelectLines();
+            var values = rawInput
+                .Repeat()
+                .Select(int.Parse)
+                .Scan(0, (next, last) => next + last);
+
+            var seen = ImmutableHashSet<int>.Empty;
+            foreach (var freq in values)
+            {
+                if (freq != 0 && seen.Contains(freq))
+                {
+                    return freq;
+                }
+
+                seen = seen.Add(freq);
+            }
+
+            return 0;
         }
 
     }

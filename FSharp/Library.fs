@@ -64,13 +64,11 @@ module Day2 =
         |> (=) 1
 
     let part2 input =
-        let pair =
-            input
-            |> Util.splitLinesSkipBlank
-            |> Seq.allPairs
-            |> Seq.find ((<||) oneLetterDifferent)
-
-        Seq.zip <|| pair
+        input
+        |> Util.splitLinesSkipBlank
+        |> Seq.allPairs
+        |> Seq.find ((<||) oneLetterDifferent)
+        ||> Seq.zip
         |> Seq.filter ((<||) (=))
         |> Seq.map fst
         |> Seq.map string

@@ -13,9 +13,20 @@ module Seq =
 
 
 module Util =
+    open System.Text.RegularExpressions
+
+    let parse pattern input =
+        let m = Regex.Match(input, pattern)
+        if m.Success then Some(List.tail [ for g in m.Groups -> g.Value ])
+        else None
+
     let splitLinesSkipBlank (input: string) =
-        Seq.toList (input.Split '\n')
+        input.Split '\n'
         |> Seq.map (fun s -> s.Trim '\r')
+        |> Seq.filter (fun s -> s.Length > 0)
+
+    let splitLine characters (input: string) =
+        input.Split characters
         |> Seq.filter (fun s -> s.Length > 0)
 
 
@@ -70,6 +81,49 @@ module Day2 =
         |> Seq.find ((<||) oneLetterDifferent)
         ||> Seq.zip
         |> Seq.filter ((<||) (=))
-        |> Seq.map fst
-        |> Seq.map string
+        |> Seq.map (fst >> string)
         |> String.concat ""
+
+
+module Day3 =
+    type Patch = { id: int; x: int; y: int; width: int; height: int }
+
+    let parsePatches input =
+        input
+        |> Util.splitLinesSkipBlank
+        |> Seq.map (Util.splitLine [|' '; '#'; '@'; ','; ':'; 'x'|])
+        |> Seq.map (List.ofSeq >> List.map int)
+        |> Seq.map (fun values ->
+            match values with
+            | [ id; x; y; w; h ] -> Some({id = id; x = x; y = y; width = w; height = h})
+            | _ -> None)
+        |> Seq.choose id
+
+    let part1 input =
+        input
+        |> parsePatches
+        |> Seq.map (fun patch -> seq { for x in patch.x .. patch.x + patch.width - 1 do for y in patch.y .. patch.y + patch.height - 1 do yield x, y })
+        |> Seq.concat
+        |> Seq.groupBy id
+        |> Seq.filter (snd >> Seq.length >> (<) 1)
+        |> Seq.length
+
+    let part2 input =
+        let patches =
+            input
+            |> parsePatches
+
+        let idsWithOverlap =
+            patches
+            |> Seq.map (fun patch -> seq { for x in patch.x .. patch.x + patch.width - 1 do for y in patch.y .. patch.y + patch.height - 1 do yield x, y, patch.id })
+            |> Seq.concat
+            |> Seq.groupBy (fun (x, y, id) -> x, y)
+            |> Seq.map snd
+            |> Seq.filter (Seq.length >> (<) 1)
+            |> Seq.concat
+            |> Seq.map (fun (x, y, id) -> id)
+            |> Set.ofSeq
+
+        patches
+        |> Seq.find (fun patch -> not (Set.contains patch.id idsWithOverlap))
+        |> (fun patch -> patch.id)

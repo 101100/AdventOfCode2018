@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 using AdventOfCode2018.FSharp;
 
@@ -41,6 +40,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 1 (F#): {Day2.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day2Part2(input)}");
                 Console.WriteLine($"Part 2 (F#): {Day2.part2(input)}");
+            }
+            else if (day == 3)
+            {
+                var input = Inputs.GetInput(3);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day3Part1(input)}");
+                Console.WriteLine($"Part 1 (F#): {Day3.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day3Part2(input)}");
+                Console.WriteLine($"Part 2 (F#): {Day3.part2(input)}");
             }
             else
             {
@@ -127,11 +135,56 @@ namespace AdventOfCode2018.CSharp
                 .ToArray());
         }
 
+
         private static bool Day2OneLetterDifferent((string, string) inputPair)
         {
             return inputPair.Item1
                 .Zip(inputPair.Item2, (left, right) => (Left: left, Right: right))
                 .Count(t => t.Left != t.Right) == 1;
+        }
+
+
+        private static int Day3Part1(string input)
+        {
+            return Program.Day3ReadPatches(input)
+                .SelectMany(t => Enumerable.Range(t.X, t.Width).SelectMany(x => Enumerable.Range(t.Y, t.Height).Select(y => (x, y))))
+                .GroupBy(t => t)
+                .Count(t => t.Count() > 1);
+        }
+
+
+        private static IEnumerable<(int Id, int X, int Y, int Width, int Height)> Day3ReadPatches(string input)
+        {
+            return input
+                .SelectLines()
+                .Select(line => line.Split(' ', '#', '@', ',', ':', 'x').Where(s => s.Length > 0).ToArray())
+                .Select(parts => (
+                    Id: int.Parse(parts[0]),
+                    X: int.Parse(parts[1]),
+                    Y: int.Parse(parts[2]),
+                    Width: int.Parse(parts[3]),
+                    Height: int.Parse(parts[4])));
+        }
+
+
+        private static int Day3Part2(string input)
+        {
+            var patches = Program.Day3ReadPatches(input)
+                .ToImmutableArray();
+
+            var positionsWithOverlap = patches
+                .SelectMany(t => Enumerable.Range(t.X, t.Width).SelectMany(x => Enumerable.Range(t.Y, t.Height).Select(y => (x, y))))
+                .GroupBy(t => t)
+                .Where(t => t.Count() > 1)
+                .Select(t => t.Key)
+                .ToImmutableHashSet();
+
+            return patches
+                .First(
+                    t => !Enumerable.Range(t.X, t.Width)
+                        .SelectMany(x => Enumerable.Range(t.Y, t.Height).Select(y => (x, y)))
+                        .Any(pos => positionsWithOverlap.Contains(pos)))
+                .Id;
         }
 
     }

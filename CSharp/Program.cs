@@ -50,6 +50,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day3Part2(input)}");
                 Console.WriteLine($"Part 2 (F#): {Day3.part2(input)}");
             }
+            else if (day == 4)
+            {
+                var input = Inputs.GetInput(4);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day4Part1(input)}");
+                Console.WriteLine($"Part 1 (F#): {Day4.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day4Part2(input)}");
+                Console.WriteLine($"Part 2 (F#): {Day4.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -185,6 +194,83 @@ namespace AdventOfCode2018.CSharp
                         .SelectMany(x => Enumerable.Range(t.Y, t.Height).Select(y => (x, y)))
                         .Any(pos => positionsWithOverlap.Contains(pos)))
                 .Id;
+        }
+
+
+        private static int Day4Part1(string input)
+        {
+            var naps = Program.Day4ParseGuardNaps(input);
+
+            var sleepyGuard = naps
+                .GroupBy(s => s.Guard, s => s.End - s.Start + 1)
+                .Select(g => (
+                    Guard: g.Key,
+                    Hours: g.Sum()))
+                .OrderByDescending(t => t.Hours)
+                .First()
+                .Guard;
+
+            var sleepyMinuteForSleepyGuard = naps
+                .Where(s => s.Guard == sleepyGuard)
+                .SelectMany(s => Enumerable.Range(s.Start, s.End - s.Start + 1))
+                .GroupBy(h => h)
+                .Select(g => (
+                    Minute: g.Key,
+                    Count: g.Count()
+                ))
+                .OrderByDescending(t => t.Count)
+                .First()
+                .Minute;
+
+            return sleepyGuard * sleepyMinuteForSleepyGuard;
+        }
+
+
+        private static ImmutableArray<(int Guard, int Day, int Start, int End)> Day4ParseGuardNaps(string input)
+        {
+            return input
+                .SelectLines()
+                .OrderBy(s => s)
+                .Select(s => (
+                    Timestamp: DateTime.Parse(s.Substring(1, 16)),
+                    Activity: s[19] == 'G' ? "start" : s[19] == 'f' ? "sleep" : "wake",
+                    Guard: s[19] == 'G' ? int.Parse(s.Substring(26).Split(' ')[0]) : default(int?)
+                ))
+                .Scan((Timestamp: DateTime.MinValue, Activity: string.Empty, Guard: -1), (acc, next) => (
+                    next.Timestamp,
+                    next.Activity,
+                    next.Guard ?? acc.Guard))
+                .PairWise()
+                .Where(p => p.Item1.Activity == "sleep")
+                .Select(pair => (
+                    Guard: pair.Item1.Guard,
+                    Day: pair.Item1.Timestamp.Hour == 23 ? pair.Item1.Timestamp.Day + 1 : pair.Item1.Timestamp.Day,
+                    Start: pair.Item1.Timestamp.Hour == 0 ? pair.Item1.Timestamp.Minute : 0,
+                    End: pair.Item2.Guard == pair.Item1.Guard && pair.Item2.Timestamp.Hour == 0 ? pair.Item2.Timestamp.Minute - 1 : 59
+                ))
+                .ToImmutableArray();
+        }
+
+
+        private static int Day4Part2(string input)
+        {
+            var sleepyGuardMinute = Program
+                .Day4ParseGuardNaps(input)
+                .SelectMany(s => Enumerable.Range(s.Start, s.End - s.Start + 1)
+                    .Select(m => (
+                        Guard: s.Guard,
+                        Minute: m)
+                    ))
+                .GroupBy(t => t)
+                .Select(g => (
+                    Guard: g.Key.Guard,
+                    Minute: g.Key.Minute,
+                    Count: g.Count()
+                ))
+                .OrderByDescending(t => t.Count)
+                .First();
+
+            return sleepyGuardMinute.Guard * sleepyGuardMinute.Minute;
         }
 
     }

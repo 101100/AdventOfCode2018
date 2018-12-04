@@ -2,14 +2,11 @@ namespace AdventOfCode2018.FSharp
 
 
 module Seq =
+    let allPairs items =
+        Seq.allPairs items items
+
     let repeat items =
         seq { while true do yield! items }
-
-    let allPairs items =
-        items
-        |> Seq.mapi (fun index1 item1 -> (Seq.mapi (fun index2 item2 -> if index1 = index2 then None else Some(item1, item2)) items))
-        |> Seq.concat
-        |> Seq.choose id
 
 
 module Util =
@@ -86,7 +83,7 @@ module Day2 =
 
 
 module Day3 =
-    type Patch = { id: int; x: int; y: int; width: int; height: int }
+    type Patch = { Id: int; X: int; Y: int; Width: int; Height: int }
 
     let parsePatches input =
         input
@@ -95,15 +92,14 @@ module Day3 =
         |> Seq.map (List.ofSeq >> List.map int)
         |> Seq.map (fun values ->
             match values with
-            | [ id; x; y; w; h ] -> Some({id = id; x = x; y = y; width = w; height = h})
+            | [ id; x; y; w; h ] -> Some({Id = id; X = x; Y = y; Width = w; Height = h})
             | _ -> None)
         |> Seq.choose id
 
     let part1 input =
         input
         |> parsePatches
-        |> Seq.map (fun patch -> seq { for x in patch.x .. patch.x + patch.width - 1 do for y in patch.y .. patch.y + patch.height - 1 do yield x, y })
-        |> Seq.concat
+        |> Seq.collect (fun patch -> seq { for x in patch.X .. patch.X + patch.Width - 1 do for y in patch.Y .. patch.Y + patch.Height - 1 do yield x, y })
         |> Seq.groupBy id
         |> Seq.filter (snd >> Seq.length >> (<) 1)
         |> Seq.length
@@ -115,8 +111,7 @@ module Day3 =
 
         let idsWithOverlap =
             patches
-            |> Seq.map (fun patch -> seq { for x in patch.x .. patch.x + patch.width - 1 do for y in patch.y .. patch.y + patch.height - 1 do yield x, y, patch.id })
-            |> Seq.concat
+            |> Seq.collect (fun patch -> seq { for x in patch.X .. patch.X + patch.Width - 1 do for y in patch.Y .. patch.Y + patch.Height - 1 do yield x, y, patch.Id })
             |> Seq.groupBy (fun (x, y, id) -> x, y)
             |> Seq.map snd
             |> Seq.filter (Seq.length >> (<) 1)
@@ -125,5 +120,69 @@ module Day3 =
             |> Set.ofSeq
 
         patches
-        |> Seq.find (fun patch -> not (Set.contains patch.id idsWithOverlap))
-        |> (fun patch -> patch.id)
+        |> Seq.find (fun patch -> not (Set.contains patch.Id idsWithOverlap))
+        |> (fun patch -> patch.Id)
+
+
+module Day4 =
+    open System
+
+    type Activity = { Timestamp: DateTime; Activity: string; Guard: int }
+    type Nap = { Guard: int; Start: int; End: int }
+
+    let parseNaps input =
+        input
+        |> Util.splitLinesSkipBlank
+        |> Seq.sort
+        |> Seq.map (fun line -> {
+            Timestamp = DateTime.Parse (line.Substring (1, 16));
+            Activity = if line.[19] = 'G' then "start" elif line.[19] = 'f' then "sleep" else "wake";
+            Guard = if line.[19] = 'G' then int ((line.Substring 26).Split ' ').[0] else -1
+        })
+        |> Seq.scan
+            (fun last next ->
+                if next.Guard <> -1 then next else { next with Guard = last.Guard })
+            { Timestamp = DateTime.MinValue; Activity = "dummy"; Guard = -1 }
+        |> Seq.pairwise
+        |> Seq.filter (fst >> (fun activity -> activity.Activity = "sleep"))
+        |> Seq.map (fun (startActivity, endActivity) -> {
+            Guard = startActivity.Guard;
+            Start = if startActivity.Timestamp.Hour = 0 then startActivity.Timestamp.Minute else 0;
+            End = if endActivity.Guard = startActivity.Guard && endActivity.Timestamp.Hour = 0 then endActivity.Timestamp.Minute - 1 else 59
+        })
+
+    let part1 input =
+        let naps =
+            input
+            |> parseNaps
+
+        let sleepyGuard =
+            naps
+            |> Seq.groupBy (fun nap -> nap.Guard)
+            |> Seq.map (fun (guard, naps) -> guard, Seq.sum (Seq.map (fun nap -> nap.End - nap.Start + 1) naps))
+            |> Seq.sortByDescending snd
+            |> Seq.head
+            |> fst
+
+        let sleepyMinuteForSleepyGuard =
+            naps
+            |> Seq.filter (fun nap -> nap.Guard = sleepyGuard)
+            |> Seq.collect (fun nap -> { nap.Start .. nap.End })
+            |> Seq.groupBy id
+            |> Seq.map (fun (minute, minutes) -> minute, Seq.length minutes)
+            |> Seq.sortByDescending snd
+            |> Seq.head
+            |> fst
+
+        sleepyGuard * sleepyMinuteForSleepyGuard
+
+    let part2 input =
+        input
+        |> parseNaps
+        |> Seq.collect (fun nap -> seq { for min in nap.Start .. nap.End -> nap.Guard, min })
+        |> Seq.groupBy id
+        |> Seq.map (fun (guardMinute, minutes) -> guardMinute, Seq.length minutes)
+        |> Seq.sortByDescending snd
+        |> Seq.head
+        |> fst
+        ||> (*)

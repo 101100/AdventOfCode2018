@@ -59,6 +59,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day4Part2(input)}");
                 Console.WriteLine($"Part 2 (F#): {Day4.part2(input)}");
             }
+            else if (day == 5)
+            {
+                var input = Inputs.GetInput(5);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day5Part1(input)}");
+                Console.WriteLine($"Part 1 (F#): {Day5.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day5Part2(input)}");
+                Console.WriteLine($"Part 2 (F#): {Day5.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -271,6 +280,88 @@ namespace AdventOfCode2018.CSharp
                 .First();
 
             return sleepyGuardMinute.Guard * sleepyGuardMinute.Minute;
+        }
+
+
+        private static int Day5Part1(string input)
+        {
+            var polymer = Program.Day25ReadPolymer(input);
+
+            return polymer.Day5FindFinalLength();
+        }
+
+
+        private static ImmutableArray<(int Char, bool Little)> Day25ReadPolymer(string input)
+        {
+            return input
+                .Trim()
+                .Select(ch =>
+                {
+                    var little = ch >= 'a' && ch <= 'z';
+                    return (
+                        Char: ch - (little ? 'a' : 'A'),
+                        Little: little);
+                })
+                .ToImmutableArray();
+        }
+
+
+        private static int Day5FindFinalLength(this IEnumerable<(int Char, bool Little)> characters)
+        {
+            var result = Program.Day5Trigger(characters);
+            while (result.Removed)
+            {
+                result = Program.Day5Trigger(result.Next);
+            }
+
+            return result.Next.Count;
+        }
+
+
+        private static (List<(int, bool)> Next, bool Removed) Day5Trigger(IEnumerable<(int Char, bool Little)> characters)
+        {
+            var output = new List<(int, bool)>();
+            var last = (Char: -1, Little: true);
+            var removed = false;
+            foreach (var next in characters)
+            {
+                if (last.Char == -1)
+                {
+                    last = next;
+                }
+                else
+                {
+                    if (last.Char == next.Char && last.Little != next.Little)
+                    {
+                        last = (Char: -1, Little: true);
+                        removed = true;
+                    }
+                    else
+                    {
+                        output.Add(last);
+                        last = next;
+                    }
+                }
+            }
+
+            if (last.Char != -1)
+            {
+                output.Add(last);
+            }
+
+            return (output, removed);
+        }
+
+
+        private static int Day5Part2(string input)
+        {
+            var characters = Program.Day25ReadPolymer(input);
+
+            return characters
+                .Select(u => u.Char)
+                .Distinct()
+                .Select(ch => characters.Where(t => t.Char != ch).Day5FindFinalLength())
+                .Min();
         }
 
     }

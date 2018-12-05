@@ -9,6 +9,11 @@ module Seq =
         seq { while true do yield! items }
 
 
+module Tuple =
+    let map f1 f2 (first, second) =
+        f1 first, f2 second
+
+
 module Util =
     open System.Text.RegularExpressions
 
@@ -134,7 +139,8 @@ module Day4 =
         input
         |> Util.splitLinesSkipBlank
         |> Seq.sort
-        |> Seq.map (fun line -> {
+        |> Seq.map (fun line ->
+        {
             Timestamp = DateTime.Parse (line.Substring (1, 16));
             Activity = if line.[19] = 'G' then "start" elif line.[19] = 'f' then "sleep" else "wake";
             Guard = if line.[19] = 'G' then int ((line.Substring 26).Split ' ').[0] else -1
@@ -145,7 +151,8 @@ module Day4 =
             { Timestamp = DateTime.MinValue; Activity = "dummy"; Guard = -1 }
         |> Seq.pairwise
         |> Seq.filter (fst >> (fun activity -> activity.Activity = "sleep"))
-        |> Seq.map (fun (startActivity, endActivity) -> {
+        |> Seq.map (fun (startActivity, endActivity) ->
+        {
             Guard = startActivity.Guard;
             Start = if startActivity.Timestamp.Hour = 0 then startActivity.Timestamp.Minute else 0;
             End = if endActivity.Guard = startActivity.Guard && endActivity.Timestamp.Hour = 0 then endActivity.Timestamp.Minute - 1 else 59
@@ -160,8 +167,7 @@ module Day4 =
             naps
             |> Seq.groupBy (fun nap -> nap.Guard)
             |> Seq.map (fun (guard, naps) -> guard, Seq.sum (Seq.map (fun nap -> nap.End - nap.Start + 1) naps))
-            |> Seq.sortByDescending snd
-            |> Seq.head
+            |> Seq.maxBy snd
             |> fst
 
         let sleepyMinuteForSleepyGuard =
@@ -170,8 +176,7 @@ module Day4 =
             |> Seq.collect (fun nap -> { nap.Start .. nap.End })
             |> Seq.groupBy id
             |> Seq.map (fun (minute, minutes) -> minute, Seq.length minutes)
-            |> Seq.sortByDescending snd
-            |> Seq.head
+            |> Seq.maxBy snd
             |> fst
 
         sleepyGuard * sleepyMinuteForSleepyGuard
@@ -182,7 +187,51 @@ module Day4 =
         |> Seq.collect (fun nap -> seq { for min in nap.Start .. nap.End -> nap.Guard, min })
         |> Seq.groupBy id
         |> Seq.map (fun (guardMinute, minutes) -> guardMinute, Seq.length minutes)
-        |> Seq.sortByDescending snd
-        |> Seq.head
+        |> Seq.maxBy snd
         |> fst
         ||> (*)
+
+
+module Day5 =
+    let parsePolymer (input: string) =
+        input
+        |> (fun s -> s.Trim())
+        |> Seq.map (fun ch ->
+            let little = ch >= 'a' && ch <= 'z'
+            ch |> int |> (-) (int (if little then 'a' else 'A')),
+            little)
+        |> List.ofSeq
+
+    let isOdd num =
+        (num % 2) = 1
+
+    let trigger polymer =
+        polymer
+        |> List.append [(-1, false)]
+        |> List.pairwise
+        |> List.fold (fun (list, count) (curr, next) -> if isOdd count || fst curr = fst next && snd curr <> snd next then list, count + 1 else curr::list, count) ([], 0)
+        |> Tuple.map id (fun count -> count > 0)
+
+    let rec fullyReact polymer =
+        let intermediate, changed = trigger polymer
+
+        if changed then fullyReact intermediate else intermediate
+
+    let part1 input =
+        input
+        |> parsePolymer
+        |> fullyReact
+        |> Seq.length
+
+    let part2 input =
+        let polymer =
+            input
+            |> parsePolymer
+            |> fullyReact
+
+        polymer
+        |> Seq.map fst
+        |> Seq.distinct
+        |> Seq.map (fun idToRemove -> List.filter (fst >> (<>) idToRemove) polymer)
+        |> Seq.map (fullyReact >> Seq.length)
+        |> Seq.min

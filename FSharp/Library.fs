@@ -30,6 +30,7 @@ module Util =
     let splitLine characters (input: string) =
         input.Split characters
         |> Seq.filter (fun s -> s.Length > 0)
+        |> List.ofSeq
 
 
 module Day1 =
@@ -94,7 +95,7 @@ module Day3 =
         input
         |> Util.splitLinesSkipBlank
         |> Seq.map (Util.splitLine [|' '; '#'; '@'; ','; ':'; 'x'|])
-        |> Seq.map (List.ofSeq >> List.map int)
+        |> Seq.map (List.map int)
         |> Seq.map (fun values ->
             match values with
             | [ id; x; y; w; h ] -> Some({Id = id; X = x; Y = y; Width = w; Height = h})
@@ -235,3 +236,68 @@ module Day5 =
         |> Seq.map (fun idToRemove -> List.filter (fst >> (<>) idToRemove) polymer)
         |> Seq.map (fullyReact >> Seq.length)
         |> Seq.min
+
+
+module Day6 =
+    type Coordinate = { X: int; Y: int; Index: int }
+
+    let distance position coordinate =
+        abs (coordinate.X - fst position) + abs (coordinate.Y - snd position)
+
+    let findClosest coordinates position =
+        coordinates
+        |> Seq.map (fun coordinate -> distance position coordinate, coordinate.Index)
+        |> Seq.sortBy fst
+        |> Seq.pairwise
+        |> Seq.head
+        |> (fun ((firstDistance, firstIndex), (secondDistance, _)) -> if firstDistance <> secondDistance then Some(firstIndex) else None)
+
+    let findTotalDistance coordinates position =
+        coordinates
+        |> Seq.map (distance position)
+        |> Seq.sum
+
+    let part1 input =
+        let coordinates =
+            input
+            |> Util.splitLinesSkipBlank
+            |> Seq.map (Util.splitLine [| ','; ' ' |])
+            |> Seq.mapi (fun index parts -> { X = parts.[0] |> int; Y = parts.[1] |> int; Index = index })
+
+        let minX = coordinates |> Seq.map (fun c -> c.X) |> Seq.min
+        let minY = coordinates |> Seq.map (fun c -> c.Y) |> Seq.min
+        let maxX = coordinates |> Seq.map (fun c -> c.X) |> Seq.max
+        let maxY = coordinates |> Seq.map (fun c -> c.Y) |> Seq.max
+
+        let infiniteOnes =
+            seq { for y in minY .. maxY -> [(minX - 1, y); (maxX + 1, y)] }
+            |> Seq.append (seq { for x in minX .. maxX -> [(x, minY - 1); (x, maxY + 1)] })
+            |> Seq.concat
+            |> Seq.map (findClosest coordinates)
+            |> Seq.choose id
+            |> Set.ofSeq
+
+        seq { for x in minX .. maxX do for y in minY .. maxY -> x, y }
+        |> Seq.map (findClosest coordinates)
+        |> Seq.choose id
+        |> Seq.filter (fun index -> not (Set.contains index infiniteOnes))
+        |> Seq.groupBy id
+        |> Seq.map (snd >> Seq.length)
+        |> Seq.max
+
+    let part2 input =
+        let coordinates =
+            input
+            |> Util.splitLinesSkipBlank
+            |> Seq.map (Util.splitLine [| ','; ' ' |])
+            |> Seq.mapi (fun index parts -> { X = parts.[0] |> int; Y = parts.[1] |> int; Index = index })
+
+        let minX = coordinates |> Seq.map (fun c -> c.X) |> Seq.min
+        let minY = coordinates |> Seq.map (fun c -> c.Y) |> Seq.min
+        let maxX = coordinates |> Seq.map (fun c -> c.X) |> Seq.max
+        let maxY = coordinates |> Seq.map (fun c -> c.Y) |> Seq.max
+
+        seq { for x in minX .. maxX do for y in minY .. maxY -> x, y }
+        |> Seq.map (findTotalDistance coordinates)
+        |> Seq.filter ((>) 10000)
+        |> Seq.length

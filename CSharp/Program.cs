@@ -68,6 +68,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day5Part2(input)}");
                 Console.WriteLine($"Part 2 (F#): {Day5.part2(input)}");
             }
+            else if (day == 6)
+            {
+                var input = Inputs.GetInput(6);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day6Part1(input)}");
+                Console.WriteLine($"Part 1 (F#): {Day6.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day6Part2(input)}");
+                Console.WriteLine($"Part 2 (F#): {Day6.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -362,6 +371,101 @@ namespace AdventOfCode2018.CSharp
                 .Distinct()
                 .Select(ch => characters.Where(t => t.Char != ch).Day5FindFinalLength())
                 .Min();
+        }
+
+
+        private static int Day6Part1(string input)
+        {
+            var positions = input
+                .SelectLines()
+                .Select(line => line.Split(", "))
+                .Select((parts, index) => (X: int.Parse(parts[0]), Y: int.Parse(parts[1]), Index: index))
+                .ToImmutableArray();
+
+            var minX = positions
+                .Select(t => t.X)
+                .Min();
+
+            var minY = positions
+                .Select(t => t.Y)
+                .Min();
+
+            var maxX = positions
+                .Select(t => t.X)
+                .Max();
+
+            var maxY = positions
+                .Select(t => t.Y)
+                .Max();
+
+            var infiniteOnes = new[] {minX - 1, maxX + 1}
+                .SelectMany(x => Enumerable.Range(minY, maxY - minY + 1).Select(y => (X: x, Y: y)))
+                .Concat(new[] {minY - 1, maxY + 1}
+                    .SelectMany(y => Enumerable.Range(minX, maxX - minX + 1).Select(x => (X: x, Y: y))))
+                .Select(pos => pos.Day6FindClosest(positions))
+                .Where(t => t.Index.HasValue)
+                .Select(t => t.Index)
+                .ToImmutableHashSet();
+
+            return Enumerable.Range(minX, maxX - minX + 1)
+                .SelectMany(x => Enumerable.Range(minY, maxY - minY + 1).Select(y => (X: x, Y: y)))
+                .Select(pos => pos.Day6FindClosest(positions))
+                .Where(t => t.Index.HasValue)
+                .GroupBy(t => t.Index)
+                .Where(g => g.Key.HasValue && !infiniteOnes.Contains(g.Key.Value))
+                .OrderByDescending(g => g.Count())
+                .First()
+                .Count();
+        }
+
+
+        private static (int? Distance, int? Index) Day6FindClosest(this (int X, int Y) pos, ImmutableArray<(int X, int Y, int Index)> possibilities)
+        {
+            return possibilities
+                .Select(thing => (Distance: Math.Abs(pos.X - thing.X) + Math.Abs(pos.Y - thing.Y), Index: thing.Index))
+                .OrderBy(t => t.Distance)
+                .PairWise()
+                .Select(t => t.Item1.Distance == t.Item2.Distance ? (default(int?), default(int?)) : (t.Item1.Distance, t.Item1.Index))
+                .First();
+        }
+
+
+        private static int Day6Part2(string input)
+        {
+            var positions = input
+                .SelectLines()
+                .Select(line => line.Split(", "))
+                .Select((parts, index) => (X: int.Parse(parts[0]), Y: int.Parse(parts[1]), Index: index))
+                .ToImmutableArray();
+
+            var minX = positions
+                .Select(t => t.X)
+                .Min();
+
+            var minY = positions
+                .Select(t => t.Y)
+                .Min();
+
+            var maxX = positions
+                .Select(t => t.X)
+                .Max();
+
+            var maxY = positions
+                .Select(t => t.Y)
+                .Max();
+
+            return Enumerable.Range(minX, maxX - minX + 1)
+                .SelectMany(x => Enumerable.Range(minY, maxY - minY + 1).Select(y => (X: x, Y: y)))
+                .Select(pos => pos.Day6FindTotalDistance(positions))
+                .Count(d => d < 10000);
+        }
+
+
+        private static int Day6FindTotalDistance(this (int X, int Y) pos, ImmutableArray<(int X, int Y, int Index)> possibilities)
+        {
+            return possibilities
+                .Select(thing => Math.Abs(pos.X - thing.X) + Math.Abs(pos.Y - thing.Y))
+                .Sum();
         }
 
     }

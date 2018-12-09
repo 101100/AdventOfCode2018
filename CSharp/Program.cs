@@ -77,6 +77,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day6Part2(input)}");
                 Console.WriteLine($"Part 2 (F#): {Day6.part2(input)}");
             }
+            else if (day == 7)
+            {
+                var input = Inputs.GetInput(7);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day7Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day7.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day7Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day7.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -466,6 +475,101 @@ namespace AdventOfCode2018.CSharp
             return possibilities
                 .Select(thing => Math.Abs(pos.X - thing.X) + Math.Abs(pos.Y - thing.Y))
                 .Sum();
+        }
+
+
+        private static string Day7Part1(string input)
+        {
+            var requiredPredecessors = Program.Day7ReadRequiredPredecessors(input);
+
+            var done = new List<char>();
+
+            while (done.Count < requiredPredecessors.Count)
+            {
+                var next = Program.Day7GetNext(requiredPredecessors, done, done);
+
+                done.Add(next);
+            }
+
+            return string.Join(string.Empty, done);
+        }
+
+
+        private static ImmutableDictionary<char, ImmutableArray<char>> Day7ReadRequiredPredecessors(string input)
+        {
+            var requiredPredecessors = input
+                .SelectLines()
+                .Select(line => line.Split(" "))
+                .Select(parts => (Prev: parts[1][0], Next: parts[7][0]))
+                .GroupBy(t => t.Next)
+                .ToImmutableDictionary(g => g.Key, g => g.Select(t => t.Prev).ToImmutableArray());
+
+            var nodesWithoutPredecessors = requiredPredecessors
+                .SelectMany(p => p.Value)
+                .Where(c => !requiredPredecessors.ContainsKey(c));
+
+            return requiredPredecessors
+                .Concat(nodesWithoutPredecessors.Select(c => new KeyValuePair<char, ImmutableArray<char>>(c, ImmutableArray<char>.Empty)))
+                .ToImmutableDictionary(p => p.Key, p => p.Value);
+        }
+
+
+        private static char Day7GetNext(IReadOnlyDictionary<char, ImmutableArray<char>> requiredPredecessors, ICollection<char> started, ICollection<char> finished)
+        {
+            return requiredPredecessors
+                .Select(p => p.Key)
+                .Where(ch => !started.Contains(ch))
+                .OrderBy(c => c)
+                .FirstOrDefault(ch => requiredPredecessors[ch].All(finished.Contains));
+        }
+
+
+        private static int Day7Part2(string input)
+        {
+            var requiredPredecessors = Program.Day7ReadRequiredPredecessors(input);
+
+            var started = new HashSet<char>();
+            var finished = new List<char>();
+
+            var second = 0;
+            var workers = Enumerable
+                .Range(0, 5)
+                .Select(_ => (Working: false, Task: ' ', RemaingTime: -1))
+                .ToArray();
+            while (finished.Count < requiredPredecessors.Count)
+            {
+                for (var i = 0; i < workers.Length; i++)
+                {
+                    if (workers[i].Working)
+                    {
+                        if (workers[i].RemaingTime == 0)
+                        {
+                            finished.Add(workers[i].Task);
+                            workers[i] = (false, ' ', -1);
+                        }
+                        else
+                        {
+                            workers[i] = (workers[i].Working, workers[i].Task, workers[i].RemaingTime - 1);
+                        }
+                    }
+
+                    if (!workers[i].Working)
+                    {
+                        var next = Program.Day7GetNext(requiredPredecessors, started, finished);
+                        if (next != default(char))
+                        {
+                            workers[i] = (true, next, 60 + (next - 'A'));
+                            started.Add(next);
+                        }
+                    }
+                }
+
+                Console.WriteLine($"{second:D4}\t{string.Join("\t", workers.Select(w => w.Task))} {string.Join(string.Empty, finished)}");
+
+                second += 1;
+            }
+
+            return second - 1;
         }
 
     }

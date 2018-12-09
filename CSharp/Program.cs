@@ -86,6 +86,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day7Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day7.part2(input)}");
             }
+            else if (day == 8)
+            {
+                var input = Inputs.GetInput(8);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day8Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day8.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day8Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day8.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -570,6 +579,82 @@ namespace AdventOfCode2018.CSharp
             }
 
             return second - 1;
+        }
+
+
+        private static int Day8Part1(string input)
+        {
+            var parsedInput = input
+                .Trim()
+                .Split(" ")
+                .Select(int.Parse)
+                .ToList();
+
+            return Program.Day8GetMetadata(parsedInput.GetEnumerator());
+        }
+
+
+        private static int Day8GetMetadata(IEnumerator<int> parsedInput)
+        {
+            parsedInput.MoveNext();
+            var childCount = parsedInput.Current;
+            parsedInput.MoveNext();
+            var metadataCount = parsedInput.Current;
+
+            var metadataTotal = 0;
+
+            for (var child = 0; child < childCount; child++)
+            {
+                metadataTotal += Program.Day8GetMetadata(parsedInput);
+            }
+
+            for (var metadata = 0; metadata < metadataCount; metadata++)
+            {
+                parsedInput.MoveNext();
+                metadataTotal += parsedInput.Current;
+            }
+
+            return metadataTotal;
+        }
+
+
+        private static int Day8Part2(string input)
+        {
+            var parsedInput = input
+                .Trim()
+                .Split(" ")
+                .Select(int.Parse)
+                .ToList();
+
+            return Program.Day8GetCost(parsedInput.GetEnumerator());
+        }
+
+
+        private static int Day8GetCost(IEnumerator<int> parsedInput)
+        {
+            parsedInput.MoveNext();
+            var childCount = parsedInput.Current;
+            parsedInput.MoveNext();
+            var metadataCount = parsedInput.Current;
+
+            var children = Enumerable
+                .Range(0, childCount)
+                .Select(_ => Program.Day8GetCost(parsedInput))
+                .ToImmutableArray();
+
+            var metadata = Enumerable
+                .Range(0, metadataCount)
+                .Select(_ =>
+                {
+                    parsedInput.MoveNext();
+                    return parsedInput.Current;
+                })
+                .ToImmutableArray();
+
+
+            return childCount == 0
+                ? metadata.Sum()
+                : metadata.Sum(m => children.Length >= m ? children[m - 1] : 0);
         }
 
     }

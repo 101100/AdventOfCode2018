@@ -95,6 +95,18 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day8Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day8.part2(input)}");
             }
+            else if (day == 9)
+            {
+                var input = Inputs.GetInput(9);
+                var inputParts = input.Split(" ");
+                var players = int.Parse(inputParts[0]);
+                var lastMarble = int.Parse(inputParts[6]);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day9Part1(players, lastMarble)}");
+//                Console.WriteLine($"Part 1 (F#): {Day9.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day9Part2(players, lastMarble)}");
+//                Console.WriteLine($"Part 2 (F#): {Day9.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -655,6 +667,79 @@ namespace AdventOfCode2018.CSharp
             return childCount == 0
                 ? metadata.Sum()
                 : metadata.Sum(m => children.Length >= m ? children[m - 1] : 0);
+        }
+
+
+        private static int Day9Part1(int players, int lastMarble)
+        {
+            var circle = new List<int>(70000) {0};
+
+            var currentIndex = 0;
+            var nextPlayer = 0;
+            var scores = Enumerable
+                .Range(0, players)
+                .Select(_ => 0)
+                .ToArray();
+
+            foreach(var marble in Enumerable.Range(1, lastMarble))
+            {
+                if (marble % 23 == 0)
+                {
+                    var toRemoveIndex = (currentIndex - 7 + circle.Count) % circle.Count;
+                    scores[nextPlayer] += (marble + circle[toRemoveIndex]);
+                    circle.RemoveAt(toRemoveIndex);
+                    currentIndex = toRemoveIndex;
+                }
+                else
+                {
+                    var nextIndex = (currentIndex + 1) % circle.Count;
+                    circle.Insert(nextIndex + 1, marble);
+                    currentIndex = nextIndex + 1;
+                }
+
+                nextPlayer = (nextPlayer + 1) % players;
+            }
+
+            return scores.Max();
+        }
+
+
+        private static long Day9Part2(int players, int lastMarble)
+        {
+            var circle = new LinkedList<int>();
+            circle.AddLast(0);
+
+            var currentNode = circle.First ?? throw new InvalidOperationException("The list can't be empty here.");
+            var nextPlayer = 0;
+            var scores = Enumerable
+                .Range(0, players)
+                .Select(_ => 0L)
+                .ToArray();
+
+            foreach(var marble in Enumerable.Range(1, lastMarble * 100))
+            {
+                if (marble % 23 == 0)
+                {
+                    for (var i = 0; i < 7; i++)
+                    {
+                        currentNode = currentNode.Previous ?? circle.Last ?? throw new InvalidOperationException("The list can't be empty here.");
+                    }
+                    scores[nextPlayer] += (marble + currentNode.Value);
+                    var toRemoveNode = currentNode;
+                    currentNode = currentNode.Next ?? circle.First ?? throw new InvalidOperationException("The list can't be empty here.");
+                    circle.Remove(toRemoveNode);
+                }
+                else
+                {
+                    currentNode = currentNode.Next ?? circle.First ?? throw new InvalidOperationException("The list can't be empty here.");
+                    circle.AddAfter(currentNode, marble);
+                    currentNode = currentNode.Next ?? throw new InvalidOperationException("We just added a node, so this should work.");
+                }
+
+                nextPlayer = (nextPlayer + 1) % players;
+            }
+
+            return scores.Max();
         }
 
     }

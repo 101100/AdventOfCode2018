@@ -107,6 +107,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day9Part2(players, lastMarble)}");
 //                Console.WriteLine($"Part 2 (F#): {Day9.part2(input)}");
             }
+            else if (day == 10)
+            {
+                var input = Inputs.GetInput(10);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day10Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day10.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day10Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day10.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -740,6 +749,72 @@ namespace AdventOfCode2018.CSharp
             }
 
             return scores.Max();
+        }
+
+
+        private static string Day10Part1(string input)
+        {
+            var startingState = input
+                .SelectLines()
+                .Select(s => s.Split("<"))
+                .Select(parts => (parts[1].Split(">")[0], parts[2].Split(">")[0]))
+                .Select(parts => (parts.Item1.Split(",").Select(s => int.Parse(s.Trim())).ToArray(), parts.Item2.Split(",").Select(s => int.Parse(s.Trim())).ToArray()))
+                .Select(parts => (PosX: parts.Item1[0], PosY: parts.Item1[1], VelX: parts.Item2[0], VelY: parts.Item2[1]))
+                .ToImmutableArray();
+
+            var messageState = EnumerableExtensions
+                .TupleGenerate(
+                    startingState,
+                    0,
+                    (_, __) => true,
+                    (lastState, time) => (lastState.Select(last => (last.PosX + last.VelX, last.PosY + last.VelY, last.VelX, last.VelY)).ToImmutableArray(), time + 1))
+                .First(state => state.Item1.Max(p => p.PosY) - state.Item1.Min(p => p.PosY) <= 10);
+
+            var minY = messageState.Item1.Min(p => p.PosY);
+            var maxY = messageState.Item1.Max(p => p.PosY);
+            var minX = messageState.Item1.Min(p => p.PosX);
+            var maxX = messageState.Item1.Max(p => p.PosX);
+
+            var width = maxX - minX + 1;
+            var height = maxY - minY + 1;
+
+            var buffer = new bool[height, width];
+
+            foreach (var tuple in messageState.Item1)
+            {
+                buffer[tuple.PosY - minY, tuple.PosX - minX] = true;
+            }
+
+            return "\n" + string.Join(
+                "\n",
+                Enumerable
+                    .Range(0, height)
+                    .Select(
+                        y => string.Join(string.Empty,
+                            Enumerable.Range(0, width)
+                                .Select(x => buffer[y, x] ? "#" : "."))));
+        }
+
+
+        private static int Day10Part2(string input)
+        {
+            var startingState = input
+                .SelectLines()
+                .Select(s => s.Split("<"))
+                .Select(parts => (parts[1].Split(">")[0], parts[2].Split(">")[0]))
+                .Select(parts => (parts.Item1.Split(",").Select(s => int.Parse(s.Trim())).ToArray(), parts.Item2.Split(",").Select(s => int.Parse(s.Trim())).ToArray()))
+                .Select(parts => (PosX: parts.Item1[0], PosY: parts.Item1[1], VelX: parts.Item2[0], VelY: parts.Item2[1]))
+                .ToImmutableArray();
+
+            var messageState = EnumerableExtensions
+                .TupleGenerate(
+                    startingState,
+                    0,
+                    (_, __) => true,
+                    (lastState, time) => (lastState.Select(last => (last.PosX + last.VelX, last.PosY + last.VelY, last.VelX, last.VelY)).ToImmutableArray(), time + 1))
+                .First(state => state.Item1.Max(p => p.PosY) - state.Item1.Min(p => p.PosY) <= 10);
+
+            return messageState.Item2;
         }
 
     }

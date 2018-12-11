@@ -116,6 +116,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day10Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day10.part2(input)}");
             }
+            else if (day == 11)
+            {
+                var input = 5791;
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day11Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day11.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day11Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day11.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -815,6 +824,100 @@ namespace AdventOfCode2018.CSharp
                 .First(state => state.Item1.Max(p => p.PosY) - state.Item1.Min(p => p.PosY) <= 10);
 
             return messageState.Item2;
+        }
+
+
+        private static string Day11Part1(int gridSerialNumber)
+        {
+            var positions = Enumerable.Range(1, 300)
+                .SelectMany(x => Enumerable.Range(1, 300).Select(y => (X: x, Y: y)))
+                .Select(pos => (
+                    X: pos.X,
+                    Y: pos.Y,
+                    PowerLevel: Program.Day11GetPowerLevel(pos.X, pos.Y, gridSerialNumber)
+                ))
+                .ToImmutableArray();
+
+            var powerArray = new int[304, 304];
+
+            foreach (var pos in positions)
+            {
+                powerArray[pos.X, pos.Y] = pos.PowerLevel;
+            }
+
+            var highest = int.MinValue;
+            var highestX = 0;
+            var highestY = 0;
+
+            foreach (var pos in positions)
+            {
+                var x = pos.X;
+                var y = pos.Y;
+                var value = 0;
+                for(var xOff = 0; xOff < 3; xOff++)
+                for (var yOff = 0; yOff < 3; yOff++)
+                {
+                    value += powerArray[x + xOff, y + yOff];
+                }
+
+                if (value > highest)
+                {
+                    highest = value;
+                    highestX = x;
+                    highestY = y;
+                }
+            }
+
+            return $"{highestX},{highestY}";
+        }
+
+
+        private static int Day11GetPowerLevel(int x, int y, int gridSerialNumber)
+        {
+            var rackId = x + 10;
+            var intermediatePowerLevel = (rackId * y + gridSerialNumber) * rackId;
+
+            return ((intermediatePowerLevel / 100) % 10) - 5;
+        }
+
+
+        private static string Day11Part2(int gridSerialNumber)
+        {
+            var summedAreaTable = new int[302, 302];
+
+            foreach (var x in EnumerableExtensions.Range(300, 300, -1))
+            foreach (var y in EnumerableExtensions.Range(300, 300, -1))
+            {
+                summedAreaTable[x, y] = Program.Day11GetPowerLevel(x, y, gridSerialNumber)
+                    - summedAreaTable[x + 1, y + 1]
+                    + summedAreaTable[x, y + 1]
+                    + summedAreaTable[x + 1, y];
+            }
+
+            var highest = int.MinValue;
+            var highestX = 0;
+            var highestY = 0;
+            var highestSize = 0;
+
+            foreach (var size in Enumerable.Range(0, 300))
+            foreach (var x in Enumerable.Range(1, 301 - size))
+            foreach (var y in Enumerable.Range(1, 301 - size))
+            {
+                var value = summedAreaTable[x, y]
+                    + summedAreaTable[x + size, y + size]
+                    - summedAreaTable[x, y + size]
+                    - summedAreaTable[x + size, y];
+
+                if (value > highest)
+                {
+                    highest = value;
+                    highestX = x;
+                    highestY = y;
+                    highestSize = size;
+                }
+            }
+
+            return $"{highestX},{highestY},{highestSize}";
         }
 
     }

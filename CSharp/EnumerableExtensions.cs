@@ -83,6 +83,14 @@ namespace AdventOfCode2018.CSharp
         }
 
 
+        public static IEnumerable<int> Range(int start, int count, int offset)
+        {
+            return Enumerable
+                .Range(0, count)
+                .Select(i => start + i * offset);
+        }
+
+
         public static IEnumerable<T> Repeat<T>(this IEnumerable<T> input, int? repetitions = null)
         {
             return Enumerable

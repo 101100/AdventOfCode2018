@@ -125,6 +125,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day11Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day11.part2(input)}");
             }
+            else if (day == 12)
+            {
+                var input = Inputs.GetInput(12);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day12Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day12.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day12Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day12.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -918,6 +927,83 @@ namespace AdventOfCode2018.CSharp
             }
 
             return $"{highestX},{highestY},{highestSize}";
+        }
+
+
+        private static int Day12Part1(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            var initialState = Enumerable.Repeat('.', 20)
+                .Concat(inputLines[0].Split(" ")[2])
+                .Concat(Enumerable.Repeat('.', 40));
+
+            var rules = inputLines
+                .Skip(1)
+                .Select(line => line.Split(" "))
+                .Select(parts => (
+                    Input: parts[0],
+                    Result: parts[2][0]))
+                .ToImmutableDictionary(t => t.Input, t => t.Result);
+
+            var lastState = EnumerableExtensions
+                .Generate(
+                    initialState,
+                    _ => true,
+                    last => Enumerable.Repeat('.', 2)
+                        .Concat(last
+                            .Window(5)
+                            .Where(arr => arr.Length == 5)
+                            .Select(chars => rules.GetValueOrDefault(new string(chars.ToArray()), '.')))
+                        .Concat(Enumerable.Repeat('.', 2)))
+                .Skip(20)
+                .First();
+
+            return lastState
+                .Select((ch, i) => ch == '#' ? i - 20 : 0)
+                .Sum();
+        }
+
+
+        private static long Day12Part2(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            var initialState = Enumerable.Repeat('.', 20)
+                .Concat(inputLines[0].Split(" ")[2])
+                .Concat(Enumerable.Repeat('.', 200));
+
+            var rules = inputLines
+                .Skip(1)
+                .Select(line => line.Split(" "))
+                .Select(parts => (
+                    Input: parts[0],
+                    Result: parts[2][0]))
+                .ToImmutableDictionary(t => t.Input, t => t.Result);
+
+            var lastPlants = EnumerableExtensions
+                .Generate(
+                    initialState,
+                    _ => true,
+                    last => Enumerable.Repeat('.', 2)
+                        .Concat(last
+                            .Window(5)
+                            .Where(arr => arr.Length == 5)
+                            .Select(chars => rules.GetValueOrDefault(new string(chars.ToArray()), '.')))
+                        .Concat(Enumerable.Repeat('.', 2)))
+                .Select((state, index) => (Plants: state.Select((ch, i) => ch == '#' ? i - 20 : 0).Sum(), Generation: index))
+                .Window(4)
+                .First(states => states[3].Plants - states[2].Plants == states[2].Plants - states[1].Plants
+                    && states[2].Plants - states[1].Plants == states[1].Plants - states[0].Plants);
+
+            var m = lastPlants[3].Plants - lastPlants[2].Plants;
+            var b = lastPlants[0].Plants - (lastPlants[0].Generation * m);
+
+            return m * 50000000000L + b;
         }
 
     }

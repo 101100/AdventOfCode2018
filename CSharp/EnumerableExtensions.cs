@@ -244,6 +244,23 @@ namespace AdventOfCode2018.CSharp
                 .Concat(input);
         }
 
+
+        public static IEnumerable<ImmutableArray<T>> Window<T>(this IEnumerable<T> input, int batchSize)
+        {
+            var curr = new List<T>(batchSize);
+
+            foreach (var item in input)
+            {
+                curr.Add(item);
+
+                if (curr.Count == batchSize)
+                {
+                    yield return curr.ToImmutableArray();
+                    curr.RemoveAt(0);
+                }
+            }
+        }
+
     }
 
 }

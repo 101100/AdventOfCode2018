@@ -134,6 +134,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day12Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day12.part2(input)}");
             }
+            else if (day == 13)
+            {
+                var input = Inputs.GetInput(13);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day13Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day13.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day13Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day13.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -1004,6 +1013,180 @@ namespace AdventOfCode2018.CSharp
             var b = lastPlants[0].Plants - (lastPlants[0].Generation * m);
 
             return m * 50000000000L + b;
+        }
+
+
+        private static string Day13Part1(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            var map = inputLines
+                .Select(line => line
+                    .Select(ch => ch == '>' || ch == '<' ? '-'
+                        : ch == '^' || ch == 'v' ? '|'
+                        : ch)
+                    .ToImmutableArray())
+                .ToImmutableArray();
+
+            var carts = inputLines
+                .SelectMany((line, row) => line
+                    .Select((ch, col) => (
+                        Row: row,
+                        Col: col,
+                        Direction: ch,
+                        NextTurn: 'l',
+                        Crashed: false
+                    ))
+                    .Where(c => c.Direction == '<' || c.Direction == '>' || c.Direction == '^' || c.Direction == 'v'))
+                .OrderBy(c => c.Row)
+                .ThenBy(c => c.Col)
+                .ToImmutableArray();
+
+            var ticks = EnumerableExtensions
+                .Generate(
+                    carts,
+                    _ => true,
+                    oldCarts =>
+                    {
+                        var usedSpots = oldCarts
+                            .Select(c => (c.Row, c.Col))
+                            .ToHashSet();
+                        var crashes = new HashSet<(int Row, int Col)>();
+                        return oldCarts
+                            .Select(c => Program.Day13GetNextCartState(c, map, usedSpots, crashes))
+                            .OrderBy(c => c.Row)
+                            .ThenBy(c => c.Col)
+                            .ToImmutableArray();
+                    });
+
+            var crashedCart = ticks
+                .First(tick => tick.Any(c => c.Crashed))
+                .First(c => c.Crashed);
+
+            return $"{crashedCart.Col},{crashedCart.Row}";
+        }
+
+
+        private static (int Row, int Col, char Direction, char NextTurn, bool Crashed) Day13GetNextCartState(
+            (int Row, int Col, char Direction, char NextTurn, bool Crashed) oldCart,
+            ImmutableArray<ImmutableArray<char>> map,
+            HashSet<(int Row, int Col)> usedSpots,
+            HashSet<(int Row, int Col)> crashes)
+        {
+            if (crashes.Contains((oldCart.Row, oldCart.Col)))
+            {
+                return (
+                    oldCart.Row,
+                    oldCart.Col,
+                    oldCart.Direction,
+                    oldCart.NextTurn,
+                    true);
+            }
+            var newRow = oldCart.Direction == '^' ? oldCart.Row - 1
+                : oldCart.Direction == 'v' ? oldCart.Row + 1
+                : oldCart.Row;
+            var newCol = oldCart.Direction == '<' ? oldCart.Col - 1
+                : oldCart.Direction == '>' ? oldCart.Col + 1
+                : oldCart.Col;
+            var newLocation = map[newRow][newCol];
+            var newDirection = newLocation == '\\'
+                ? (oldCart.Direction == '>' ? 'v'
+                    : oldCart.Direction == '<' ? '^'
+                    : oldCart.Direction == '^' ? '<'
+                    : '>') // oldCart.Direction == 'v'
+                : newLocation == '/'
+                    ? (oldCart.Direction == '>' ? '^'
+                    : oldCart.Direction == '<' ? 'v'
+                    : oldCart.Direction == '^' ? '>'
+                    : '<') // oldCart.Direction == 'v'
+                : newLocation == '+'
+                    ? (oldCart.Direction == 'v' && oldCart.NextTurn == 'l' ? '>'
+                    : oldCart.Direction == 'v' && oldCart.NextTurn == 'r' ? '<'
+                    : oldCart.Direction == 'v' && oldCart.NextTurn == 's' ? 'v'
+                    : oldCart.Direction == '^' && oldCart.NextTurn == 'l' ? '<'
+                    : oldCart.Direction == '^' && oldCart.NextTurn == 'r' ? '>'
+                    : oldCart.Direction == '^' && oldCart.NextTurn == 's' ? '^'
+                    : oldCart.Direction == '>' && oldCart.NextTurn == 'l' ? '^'
+                    : oldCart.Direction == '>' && oldCart.NextTurn == 'r' ? 'v'
+                    : oldCart.Direction == '>' && oldCart.NextTurn == 's' ? '>'
+                    : oldCart.Direction == '<' && oldCart.NextTurn == 'l' ? 'v'
+                    : oldCart.Direction == '<' && oldCart.NextTurn == 'r' ? '^'
+                    : '<') // oldCart.Direction == '<' && oldCart.NextTurn == 's'
+                : oldCart.Direction;
+            var newNextTurn = newLocation == '+'
+                ? (oldCart.NextTurn == 'l' ? 's' : oldCart.NextTurn == 's' ? 'r' : 'l')
+                : oldCart.NextTurn;
+            var crashed = usedSpots.Contains((newRow, newCol));
+            usedSpots.Add((newRow, newCol));
+            usedSpots.Remove((oldCart.Row, oldCart.Col));
+            if (crashed)
+            {
+                crashes.Add((newRow, newCol));
+            }
+
+            return (
+                newRow,
+                newCol,
+                newDirection,
+                newNextTurn,
+                crashed
+            );
+        }
+
+
+        private static string Day13Part2(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            var map = inputLines
+                .Select(line => line
+                    .Select(ch => ch == '>' || ch == '<' ? '-'
+                        : ch == '^' || ch == 'v' ? '|'
+                        : ch)
+                    .ToImmutableArray())
+                .ToImmutableArray();
+
+            var carts = inputLines
+                .SelectMany((line, row) => line
+                    .Select((ch, col) => (
+                        Row: row,
+                        Col: col,
+                        Direction: ch,
+                        NextTurn: 'l',
+                        Crashed: false
+                    ))
+                    .Where(c => c.Direction == '<' || c.Direction == '>' || c.Direction == '^' || c.Direction == 'v'))
+                .OrderBy(c => c.Row)
+                .ThenBy(c => c.Col)
+                .ToImmutableArray();
+
+            var ticks = EnumerableExtensions
+                    .Generate(
+                        carts,
+                        _ => true,
+                        oldCarts =>
+                        {
+                            var usedSpots = oldCarts
+                                .Select(c => (c.Row, c.Col))
+                                .ToHashSet();
+                            var crashes = new HashSet<(int Row, int Col)>();
+                            return oldCarts
+                                .Select(c => Program.Day13GetNextCartState(c, map, usedSpots, crashes))
+                                .ToImmutableArray()
+                                .Where(c => !c.Crashed && !crashes.Contains((c.Row, c.Col)))
+                                .OrderBy(c => c.Row)
+                                .ThenBy(c => c.Col)
+                                .ToImmutableArray();
+                        });
+
+            var lastCart = ticks
+                .First(tick => tick.Length == 1)[0];
+
+            return $"{lastCart.Col},{lastCart.Row}";
         }
 
     }

@@ -143,6 +143,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day13Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day13.part2(input)}");
             }
+            else if (day == 14)
+            {
+                var input = "030121";
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day14Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day14.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day14Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day14.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -1187,6 +1196,67 @@ namespace AdventOfCode2018.CSharp
                 .First(tick => tick.Length == 1)[0];
 
             return $"{lastCart.Col},{lastCart.Row}";
+        }
+
+
+        private static string Day14Part1(string input)
+        {
+            var count = int.Parse(input);
+            var startingList = ImmutableList<int>.Empty.Add(3).Add(7);
+            var lastState = EnumerableExtensions
+                .TupleGenerate(
+                    startingList,
+                    0,
+                    1,
+                    (recipes, _, __) => recipes.Count < count + 12,
+                    (recipes, elf1, elf2) =>
+                    {
+                        var sum = recipes[elf1] + recipes[elf2];
+                        var newRecipes = sum < 10
+                            ? recipes.Add(sum)
+                            : recipes.Add(sum / 10).Add(sum % 10);
+                        return (
+                            newRecipes,
+                            (elf1 + newRecipes[elf1] + 1) % newRecipes.Count,
+                            (elf2 + newRecipes[elf2] + 1) % newRecipes.Count);
+                    })
+                .Last();
+
+            return string.Join(
+                string.Empty,
+                lastState
+                    .Item1
+                    .Skip(count)
+                    .Take(10));
+        }
+
+
+        private static int Day14Part2(string input)
+        {
+            var startingList = ImmutableList<int>.Empty.Add(3).Add(7);
+            var lastState = EnumerableExtensions
+                .TupleGenerate(
+                    startingList,
+                    0,
+                    1,
+                    (_, __, ___) => true,
+                    (recipes, elf1, elf2) =>
+                    {
+                        var sum = recipes[elf1] + recipes[elf2];
+                        var newRecipes = sum < 10
+                            ? recipes.Add(sum)
+                            : recipes.Add(sum / 10).Add(sum % 10);
+                        return (
+                            newRecipes,
+                            (elf1 + newRecipes[elf1] + 1) % newRecipes.Count,
+                            (elf2 + newRecipes[elf2] + 1) % newRecipes.Count);
+                    })
+                .Select(t => (
+                    Tail: string.Join(string.Empty, t.Item1.Skip(t.Item1.Count - 10)),
+                    Skipped: t.Item1.Count - 10))
+                .First(s => s.Tail.Contains(input));
+
+            return lastState.Tail.IndexOf(input, StringComparison.Ordinal) + lastState.Skipped;
         }
 
     }

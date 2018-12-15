@@ -56,13 +56,18 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        public static IEnumerable<T> Generate<T>(T seed, Func<T, bool> predicate, Func<T, T> iterate)
+        public static IEnumerable<T> Generate<T>(T seed, Func<T, bool> predicate, Func<T, T> iterate, bool includeLast = false)
         {
             var next = seed;
             while (predicate(next))
             {
                 yield return next;
                 next = iterate(next);
+            }
+
+            if (includeLast)
+            {
+                yield return next;
             }
         }
 
@@ -120,6 +125,13 @@ namespace AdventOfCode2018.CSharp
                 .Split("\n")
                 .Select(r => r.Trim('\r'))
                 .Where(s => s.Length > 0);
+        }
+
+
+        public static IEnumerable<T?> ToNullable<T>(this IEnumerable<T> input) where T : struct
+        {
+            return input
+                .Select(value => (T?) value);
         }
 
 

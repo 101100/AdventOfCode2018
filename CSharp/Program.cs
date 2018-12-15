@@ -152,6 +152,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day14Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day14.part2(input)}");
             }
+            else if (day == 15)
+            {
+                var input = Inputs.GetInput(15);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day15Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day15.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day15Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day15.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -1257,6 +1266,285 @@ namespace AdventOfCode2018.CSharp
                 .First(s => s.Tail.Contains(input));
 
             return lastState.Tail.IndexOf(input, StringComparison.Ordinal) + lastState.Skipped;
+        }
+
+
+        private static int Day15Part1(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            return Program.Day15SimulateBattle(inputLines).Outcome;
+        }
+
+
+        private static (int Outcome, int DeadElves) Day15SimulateBattle(ImmutableArray<string> inputLines, int elfPower = 3)
+        {
+            var map = inputLines
+                .Select(line => line.ToArray())
+                .ToArray();
+
+            var units = Enumerable.Range(0, map.Length)
+                .SelectMany(row => Enumerable.Range(0, map[0].Length)
+                        .Select(col => (Row: row, Col: col, Item: map[row][col])))
+                .Where(t => t.Item == 'E' || t.Item == 'G')
+                .Select((t, index) => new Day15Unit
+                {
+                    Row = t.Row,
+                    Col = t.Col,
+                    Unit = t.Item,
+                    HitPoints = 200,
+                    AttackPower = t.Item == 'E' ? elfPower : 3
+                })
+                .ToImmutableArray();
+
+            var fullRounds = 0;
+            var stop = false;
+            while (units.Where(u => u.HitPoints > 0).Select(u => u.Unit).Distinct().Count() > 1)
+            {
+                var unitsToProcess = units
+                    .OrderBy(u => u.Row)
+                    .ThenBy(u => u.Col)
+                    .ToImmutableArray();
+
+                foreach (var unit in unitsToProcess)
+                {
+                    if (unit.HitPoints <= 0) continue;
+
+                    var foundNoEnemies = Program.Day15ProcessUnit(unit, map, units);
+
+                    if (foundNoEnemies)
+                    {
+                        stop = true;
+                        break;
+                    }
+                }
+
+                if (stop)
+                {
+                    break;
+                }
+
+                fullRounds += 1;
+
+//                Console.WriteLine($"After {fullRounds} Rounds:");
+//                Program.Day15PrintMap(map, units);
+            }
+
+            return (
+                Outcome: fullRounds * units.Where(u => u.HitPoints > 0).Sum(u => u.HitPoints),
+                DeadElves: units.Count(u => u.Unit == 'E' && u.HitPoints <= 0));
+        }
+
+
+        // ReSharper disable once UnusedMember.Local
+        private static void Day15PrintMap(char[][] map, ImmutableArray<Day15Unit> units)
+        {
+            Console.WriteLine(string.Join(
+                "\n",
+                map.Select((line, i) =>
+                    string.Concat(
+                        new string(line),
+                        "  ",
+                        string.Join(", ", units.Where(u => u.HitPoints > 0 && u.Row == i).OrderBy(u => u.Col))))));
+        }
+
+
+        private sealed class Day15Unit
+        {
+
+            public int Row;
+            public int Col;
+            public char Unit;
+            public int HitPoints;
+            public int AttackPower;
+
+            public override string ToString()
+            {
+                return $"{this.Unit}@{this.Col},{this.Row}: {this.HitPoints}";
+            }
+        }
+
+
+        private static bool Day15ProcessUnit(Day15Unit unit, char[][] map, ImmutableArray<Day15Unit> units)
+        {
+            var enemy = unit.Unit == 'E' ? 'G' : 'E';
+
+            // find spaces adjacent to enemies
+            var enemies = units
+                .Where(u => u.Unit == enemy && u.HitPoints > 0)
+                .ToImmutableArray();
+
+            if (enemies.Length == 0)
+            {
+                return true;
+            }
+
+            var enemyAdjacentSpaces = enemies
+                .SelectMany(e => new []
+                {
+                    (Row: e.Row + 1, Col: e.Col),
+                    (Row: e.Row - 1, Col: e.Col),
+                    (Row: e.Row, Col: e.Col + 1),
+                    (Row: e.Row, Col: e.Col - 1)
+                })
+                .Where(pos => (pos.Row == unit.Row && pos.Col == unit.Col) || pos.Row >= 0
+                    && pos.Row < map.Length
+                    && pos.Col >= 0
+                    && pos.Col < map[0].Length
+                    && map[pos.Row][pos.Col] == '.')
+                .ToImmutableHashSet();
+
+            if (!enemyAdjacentSpaces.Contains((unit.Row, unit.Col)))
+            {
+                // find closest space, path and step
+                var step = Program.Day15GetSteps(unit, map, enemyAdjacentSpaces)
+                    .OrderBy(t => t.Distance)
+                    .ThenBy(t => t.Row)
+                    .ThenBy(t => t.Col)
+                    .Take(1)
+                    .Select(t => t.FirstStep)
+                    .ToNullable()
+                    .FirstOrDefault();
+
+                // take one step
+                if (step.HasValue)
+                {
+                    map[unit.Row][unit.Col] = '.';
+                    map[step.Value.Row][step.Value.Col] = unit.Unit;
+                    unit.Row = step.Value.Row;
+                    unit.Col = step.Value.Col;
+                }
+            }
+
+            // attack if you can
+            var adjacentEnemyWithLowestHitPoints = new []
+                {
+                    (Row: unit.Row + 1, Col: unit.Col),
+                    (Row: unit.Row - 1, Col: unit.Col),
+                    (Row: unit.Row, Col: unit.Col + 1),
+                    (Row: unit.Row, Col: unit.Col - 1)
+                }
+                .Where(pos => pos.Row >= 0
+                    && pos.Row < map.Length
+                    && pos.Col >= 0
+                    && pos.Col < map[0].Length
+                    && map[pos.Row][pos.Col] == enemy)
+                .Select(pos => units.First(u => u.Row == pos.Row && u.Col == pos.Col && u.HitPoints > 0))
+                .OrderBy(u => u.HitPoints)
+                .ThenBy(u => u.Row)
+                .ThenBy(u => u.Col)
+                .FirstOrDefault();
+
+            if (adjacentEnemyWithLowestHitPoints != null)
+            {
+                adjacentEnemyWithLowestHitPoints.HitPoints -= unit.AttackPower;
+                if (adjacentEnemyWithLowestHitPoints.HitPoints <= 0)
+                {
+                    map[adjacentEnemyWithLowestHitPoints.Row][adjacentEnemyWithLowestHitPoints.Col] = '.';
+                }
+            }
+
+            return false;
+        }
+
+
+        private static IEnumerable<(int Row, int Col, (int Row, int Col) FirstStep, int Distance)> Day15GetSteps(Day15Unit unit, char[][] map, ImmutableHashSet<(int Row, int Col)> enemyAdjacentSpaces)
+        {
+            var visited = new HashSet<(int Row, int Col)> {(unit.Row, unit.Col)};
+            var queue = new Queue<(int Row, int Col, (int Row, int Col) FirstStep, int Distance)>();
+            if (unit.Row > 0)
+            {
+                var step = (Row: unit.Row - 1, Col: unit.Col);
+                if (map[step.Row][step.Col] == '.')
+                {
+                    queue.Enqueue((step.Row, step.Col, step, 1));
+                }
+            }
+            if (unit.Col > 0)
+            {
+                var step = (Row: unit.Row, Col: unit.Col - 1);
+                if (map[step.Row][step.Col] == '.')
+                {
+                    queue.Enqueue((step.Row, step.Col, step, 1));
+                }
+            }
+            if (unit.Col < map[0].Length - 1)
+            {
+                var step = (Row: unit.Row, Col: unit.Col + 1);
+                if (map[step.Row][step.Col] == '.')
+                {
+                    queue.Enqueue((step.Row, step.Col, step, 1));
+                }
+            }
+            if (unit.Row < map.Length - 1)
+            {
+                var step = (Row: unit.Row + 1, Col: unit.Col);
+                if (map[step.Row][step.Col] == '.')
+                {
+                    queue.Enqueue((step.Row, step.Col, step, 1));
+                }
+            }
+            while (queue.Count > 0)
+            {
+                var next = queue.Dequeue();
+                if (!visited.Contains((next.Row, next.Col)))
+                {
+                    visited.Add((next.Row, next.Col));
+                    if (enemyAdjacentSpaces.Contains((next.Row, next.Col)))
+                    {
+                        yield return next;
+                    }
+
+                    if (next.Row > 0)
+                    {
+                        var step = (Row: next.Row - 1, Col: next.Col);
+                        if (map[step.Row][step.Col] == '.')
+                        {
+                            queue.Enqueue((step.Row, step.Col, next.FirstStep, next.Distance + 1));
+                        }
+                    }
+                    if (next.Col > 0)
+                    {
+                        var step = (Row: next.Row, Col: next.Col - 1);
+                        if (map[step.Row][step.Col] == '.')
+                        {
+                            queue.Enqueue((step.Row, step.Col, next.FirstStep, next.Distance + 1));
+                        }
+                    }
+                    if (next.Col < map[0].Length - 1)
+                    {
+                        var step = (Row: next.Row, Col: next.Col + 1);
+                        if (map[step.Row][step.Col] == '.')
+                        {
+                            queue.Enqueue((step.Row, step.Col, next.FirstStep, next.Distance + 1));
+                        }
+                    }
+                    if (next.Row < map.Length - 1)
+                    {
+                        var step = (Row: next.Row + 1, Col: next.Col);
+                        if (map[step.Row][step.Col] == '.')
+                        {
+                            queue.Enqueue((step.Row, step.Col, next.FirstStep, next.Distance + 1));
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private static int Day15Part2(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            return Enumerable
+                .Range(4, 200)
+                .Select(elfPower => Program.Day15SimulateBattle(inputLines, elfPower))
+                .First(t => t.DeadElves == 0)
+                .Outcome;
         }
 
     }

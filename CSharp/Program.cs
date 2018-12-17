@@ -161,6 +161,16 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day15Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day15.part2(input)}");
             }
+            else if (day == 17)
+            {
+                var input = Inputs.GetInput(17);
+                var cSharpOutput = Program.Day17(input);
+
+                Console.WriteLine($"Part 1 (C#): {cSharpOutput.Part1}");
+//                Console.WriteLine($"Part 1 (F#): {Day17.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {cSharpOutput.Part2}");
+//                Console.WriteLine($"Part 2 (F#): {Day17.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -1545,6 +1555,199 @@ namespace AdventOfCode2018.CSharp
                 .Select(elfPower => Program.Day15SimulateBattle(inputLines, elfPower))
                 .First(t => t.DeadElves == 0)
                 .Outcome;
+        }
+
+
+        private static (int Part1, int Part2) Day17(string input)
+        {
+            var map = Program.Day17GetFinalMap(input);
+
+            return (
+                Part1: Program.Day17CountWater(map),
+                Part2: Day17CountFixedWater(map));
+        }
+
+
+        private static char[,] Day17GetFinalMap(string input)
+        {
+            var clayLocations = input
+                .SelectLines()
+                .SelectMany(line =>
+                {
+                    var parts = line.Split(", ");
+                    var laterParts = parts[1].Substring(2).Split("..");
+                    var first = int.Parse(parts[0].Substring(2));
+                    var second = int.Parse(laterParts[0]);
+                    var third = int.Parse(laterParts[1]);
+                    return Enumerable.Range(second, third - second + 1)
+                        .Select(
+                            i => line[0] == 'x'
+                                ? (
+                                    X: first,
+                                    Y: i
+                                )
+                                : (
+                                    X: i,
+                                    Y: first
+                                ));
+                })
+                .ToImmutableArray();
+
+            var maxX = clayLocations.Max(pos => pos.X) + 1;
+            var minY = clayLocations.Min(pos => pos.Y);
+            var maxY = clayLocations.Max(pos => pos.Y);
+
+            var map = new char[maxX + 1, maxY + 1];
+
+            for (var x = 0; x < map.GetLength(0); x++)
+            for (var y = 0; y < map.GetLength(1); y++)
+            {
+                map[x, y] = '.';
+            }
+
+            foreach (var clayLocation in clayLocations)
+            {
+                map[clayLocation.X, clayLocation.Y] = '#';
+            }
+
+            var waterSpots = 0;
+            var lastWater = -1;
+            while (waterSpots != lastWater)
+            {
+                var visited = new HashSet<(int X, int Y)>();
+                Program.Day17SpreadWaterDown(map, visited, maxX, maxY, 500, minY);
+
+                lastWater = waterSpots;
+                waterSpots = Program.Day17CountFixedWater(map);
+            }
+
+            return map;
+        }
+
+
+        private static int Day17CountFixedWater(char[,] map)
+        {
+            var sum = 0;
+            for (var x = 0; x < map.GetLength(0); x++)
+            for (var y = 0; y < map.GetLength(1); y++)
+            {
+                sum += map[x, y] == '~' ? 1 : 0;
+            }
+
+            return sum;
+        }
+
+
+        private static int Day17CountWater(char[,] map)
+        {
+            var sum = 0;
+            for (var x = 0; x < map.GetLength(0); x++)
+            for (var y = 0; y < map.GetLength(1); y++)
+            {
+                sum += map[x, y] == '~' || map[x, y] == '|' ? 1 : 0;
+            }
+
+            return sum;
+        }
+
+
+        // ReSharper disable once UnusedMember.Local
+        private static void Day17PrintMap(char[,] map, int minX)
+        {
+            for (var y = 0; y < map.GetLength(1); y++)
+            {
+                for (var x = minX; x < map.GetLength(0); x++)
+                {
+                    Console.Write(map[x, y]);
+                }
+                Console.WriteLine();
+            }
+        }
+
+
+        private static void Day17SpreadWaterDown(
+            char[,] map,
+            HashSet<(int X, int Y)> visited,
+            int maxX,
+            int maxY,
+            int sourceX,
+            int sourceY)
+        {
+            if (visited.Contains((sourceX, sourceY)))
+            {
+                return;
+            }
+
+            var y = sourceY;
+            while (y <= maxY
+                && map[sourceX, y] != '#'
+                && map[sourceX, y] != '~')
+            {
+                map[sourceX, y] = '|';
+                visited.Add((sourceX, y));
+                y += 1;
+            }
+
+            if (y > maxY)
+            {
+                return;
+            }
+
+            if (sourceX > 0 && map[sourceX, y - 1] != '#')
+            {
+                Program.Day17SpreadWaterAcross(map, visited, maxX, maxY, sourceX, y - 1);
+            }
+        }
+
+
+        private static void Day17SpreadWaterAcross(
+            char[,] map,
+            HashSet<(int X, int Y)> visited,
+            int maxX,
+            int maxY,
+            int sourceX,
+            int sourceY)
+        {
+            var leftX = sourceX;
+            while (map[leftX, sourceY] != '#'
+                && map[leftX, sourceY] != '~'
+                && (map[leftX, sourceY + 1] == '#' || map[leftX, sourceY + 1] == '~'))
+            {
+                map[leftX, sourceY] = '|';
+                visited.Add((leftX, sourceY));
+                leftX -= 1;
+            }
+
+            var rightX = sourceX;
+            while (map[rightX, sourceY] != '#'
+                && map[rightX, sourceY] != '~'
+                && (map[rightX, sourceY + 1] == '#' || map[rightX, sourceY + 1] == '~'))
+            {
+                map[rightX, sourceY] = '|';
+                visited.Add((rightX, sourceY));
+                rightX += 1;
+            }
+
+            var leftCanFall = (map[leftX, sourceY + 1] != '#' && map[leftX, sourceY + 1] != '~');
+            var rightCanFall = (map[rightX, sourceY + 1] != '#' && map[rightX, sourceY + 1] != '~');
+            if (!leftCanFall && !rightCanFall)
+            {
+                for (var fillX = leftX + 1; fillX < rightX; fillX++)
+                {
+                    map[fillX, sourceY] = '~';
+                }
+            }
+            else
+            {
+                if (leftCanFall)
+                {
+                    Program.Day17SpreadWaterDown(map, visited, maxX, maxY, sourceX: leftX, sourceY: sourceY);
+                }
+                if (rightCanFall)
+                {
+                    Program.Day17SpreadWaterDown(map, visited, maxX, maxY, sourceX: rightX, sourceY: sourceY);
+                }
+            }
         }
 
     }

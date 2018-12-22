@@ -158,13 +158,18 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        public static IEnumerable<(T1, T2)> TupleGenerate<T1, T2>(T1 seed1, T2 seed2, Func<T1, T2, bool> predicate, Func<T1, T2, (T1, T2)> iterate)
+        public static IEnumerable<(T1, T2)> TupleGenerate<T1, T2>(T1 seed1, T2 seed2, Func<T1, T2, bool> predicate, Func<T1, T2, (T1, T2)> iterate, bool includeLast = false)
         {
             var next = (seed1, seed2);
             while (predicate(next.Item1, next.Item2))
             {
                 yield return next;
                 next = iterate(next.Item1, next.Item2);
+            }
+
+            if (includeLast)
+            {
+                yield return next;
             }
         }
 

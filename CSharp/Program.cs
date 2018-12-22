@@ -180,6 +180,16 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day19Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day19.part2(input)}");
             }
+            else if (day == 22)
+            {
+                var depth = 11739;
+                var target = (X: 11, Y: 718);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day22Part1(depth, target)}");
+//                Console.WriteLine($"Part 1 (F#): {Day22.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day22Part2(depth, target)}");
+//                Console.WriteLine($"Part 2 (F#): {Day22.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -1885,6 +1895,192 @@ namespace AdventOfCode2018.CSharp
             // Day 19 Part 2 requires decompiling and optimizing the assembly instructions
 
             return "Try running 'node day19-3.js'";
+        }
+
+
+        private static int Day22Part1(int depth, (int X, int Y) target)
+        {
+            var erosionLevel = Program.Day22GetErosionLevels(depth, target);
+
+            return Enumerable.Range(0, target.Y + 1)
+                .SelectMany(y => Enumerable.Range(0, target.X + 1)
+                    .Select(x => erosionLevel[y, x] % 3))
+                .Sum();
+        }
+
+
+        private static int[,] Day22GetErosionLevels(int depth, (int X, int Y) target)
+        {
+            const int moduloThing = 20183;
+            var erosionLevel = new int[target.Y + 1, target.X + 1];
+
+            foreach (var y in Enumerable.Range(0, target.Y + 1))
+            {
+                foreach (var x in Enumerable.Range(0, target.X + 1))
+                {
+                    if ((y == 0 && x == 0) || (y == target.Y && x == target.X))
+                    {
+                        erosionLevel[y, x] = (0 + depth) % moduloThing;
+                    }
+                    else if (x == 0)
+                    {
+                        erosionLevel[y, x] = (y * 48271 + depth) % moduloThing;
+                    }
+                    else if (y == 0)
+                    {
+                        erosionLevel[y, x] = (x * 16807 + depth) % moduloThing;
+                    }
+                    else
+                    {
+                        erosionLevel[y, x] = (erosionLevel[y - 1, x] * erosionLevel[y, x - 1] + depth) % moduloThing;
+                    }
+                }
+            }
+
+            return erosionLevel;
+        }
+
+
+        private static int Day22Part2(int depth, (int X, int Y) target)
+        {
+            var erosionLevel = Program.Day22GetErosionLevels(depth, (target.X * 3, target.Y * 2));
+
+            var possibilities =
+                new Dictionary<((int X, int Y) Location, char Equipment), (int CostToHere, int TotalHeuristicCost, bool Processed)>
+                {
+                    { ((0, 0), 'T'), (0, (0, 0).Day22FindDistance(target), false) }
+                };
+
+            var ((location, equipment), costToLocation) = Program.Day22BestPossibility(target, possibilities);
+            while (location != target || equipment != 'T')
+            {
+                var locationType = erosionLevel[location.Y, location.X] % 3;
+
+                if (location.X > 0)
+                {
+                    Program.Day22AddPossibility(equipment, costToLocation, locationType, (location.X - 1, location.Y), erosionLevel, possibilities, target);
+                }
+                if (location.Y > 0)
+                {
+                    Program.Day22AddPossibility(equipment, costToLocation, locationType, (location.X, location.Y - 1), erosionLevel, possibilities, target);
+                }
+                if (location.X < target.X * 3) {
+                    Program.Day22AddPossibility(equipment, costToLocation, locationType, (location.X + 1, location.Y), erosionLevel, possibilities, target);
+                }
+                if (location.Y < target.Y * 2) {
+                    Program.Day22AddPossibility(equipment, costToLocation, locationType, (location.X, location.Y + 1), erosionLevel, possibilities, target);
+                }
+
+                if (location == target)
+                {
+                    possibilities[(location, 'T')] = (costToLocation + 7, costToLocation + 7, false);
+                }
+
+                ((location, equipment), costToLocation) = Program.Day22BestPossibility(target, possibilities);
+            }
+
+            return costToLocation;
+        }
+
+
+        private static (((int X, int Y) Location, char Equipment) Position, int CostToHere) Day22BestPossibility(
+            (int X, int Y) target,
+            Dictionary<((int X, int Y) Location, char Equipment), (int CostToHere, int TotalHeuristicCost, bool Processed)> possibilities)
+        {
+            var best = (Location: (X: -1, Y: -1), Equipment: '?');
+            var bestCostToHere = int.MaxValue;
+            var bestHeuristicCost = int.MaxValue;
+            foreach (var pair in possibilities.Where(p => !p.Value.Processed))
+            {
+                if (pair.Value.TotalHeuristicCost < bestHeuristicCost)
+                {
+                    best = pair.Key;
+                    bestCostToHere = pair.Value.CostToHere;
+                    bestHeuristicCost = pair.Value.TotalHeuristicCost;
+                }
+            }
+
+            possibilities[best] = (bestCostToHere, bestHeuristicCost, true);
+            return (best, bestCostToHere);
+        }
+
+
+        private static int Day22FindDistance(this (int X, int Y) pos, (int X, int Y) dest)
+        {
+            return Math.Abs(pos.X - dest.X) + Math.Abs(pos.Y - dest.Y);
+        }
+
+
+        private static void Day22AddPossibility(
+            char oldEquipment,
+            int costToOldLocation,
+            int oldLocationType,
+            (int X, int Y) newLocation,
+            int[,] erosionLevel,
+            Dictionary<((int X, int Y) Location, char Equipment), (int CostToHere, int TotalHeuristicCost, bool Processed)> possibilities,
+            (int X, int Y) target)
+        {
+            var newLocationType = erosionLevel[newLocation.Y, newLocation.X] % 3;
+
+            var newEquipment = oldEquipment;
+            if (newLocationType == 0)
+            {
+                if (oldEquipment == 'N')
+                {
+                    if (oldLocationType == 1)
+                    {
+                        newEquipment = 'C';
+                    }
+                    else // 2
+                    {
+                        newEquipment = 'T';
+                    }
+                }
+            }
+            else if (newLocationType == 1)
+            {
+                if (oldEquipment == 'T')
+                {
+                    if (oldLocationType == 0)
+                    {
+                        newEquipment = 'C';
+                    }
+                    else // 2
+                    {
+                        newEquipment = 'N';
+                    }
+                }
+            }
+            else if (newLocationType == 2)
+            {
+                if (oldEquipment == 'C')
+                {
+                    if (oldLocationType == 0)
+                    {
+                        newEquipment = 'T';
+                    }
+                    else // 1
+                    {
+                        newEquipment = 'N';
+                    }
+                }
+            }
+
+            var newCostToLocation = costToOldLocation + 1 + (oldEquipment == newEquipment ? 0 : 7);
+            var newHeuristicCost = newCostToLocation + newLocation.Day22FindDistance(target);
+            var newKey = (newLocation, newEquipment);
+
+            if (possibilities.TryGetValue(newKey, out var oldValue))
+            {
+                if (newCostToLocation < oldValue.CostToHere)
+                {
+                    possibilities[newKey] = (newCostToLocation, newHeuristicCost, false);
+                }
+            }
+            else
+            {
+                possibilities.Add(newKey, (newCostToLocation, newHeuristicCost, false));
+            }
         }
 
     }

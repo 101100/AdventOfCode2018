@@ -171,6 +171,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {cSharpOutput.Part2}");
 //                Console.WriteLine($"Part 2 (F#): {Day17.part2(input)}");
             }
+            else if (day == 19)
+            {
+                var input = Inputs.GetInput(19);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day19Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day19.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day19Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day19.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -1564,7 +1573,7 @@ namespace AdventOfCode2018.CSharp
 
             return (
                 Part1: Program.Day17CountWater(map),
-                Part2: Day17CountFixedWater(map));
+                Part2: Program.Day17CountFixedWater(map));
         }
 
 
@@ -1748,6 +1757,134 @@ namespace AdventOfCode2018.CSharp
                     Program.Day17SpreadWaterDown(map, visited, maxX, maxY, sourceX: rightX, sourceY: sourceY);
                 }
             }
+        }
+
+
+        private static int Day19Part1(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            var ipRegister = int.Parse(inputLines[0].Split(" ")[1]);
+
+            var instructions = inputLines
+                .Skip(1)
+                .Select(line => line.Split(" "))
+                .Select(parts => (
+                    Instruction: parts[0],
+                    A: int.Parse(parts[1]),
+                    B: int.Parse(parts[2]),
+                    C: int.Parse(parts[3])))
+                .ToImmutableArray();
+
+            var finalState = EnumerableExtensions
+                .Generate(
+                    (
+                        Registers: ImmutableDictionary<int, int>.Empty,
+                        InstructionPointer: 0
+                    ),
+                    state => state.InstructionPointer >= 0 && state.InstructionPointer < instructions.Length,
+                    state => Program.Day19ProcessOneInstructions(state.Registers, state.InstructionPointer, ipRegister, instructions),
+                    includeLast: true)
+                .Last();
+
+            return finalState.Registers.GetValueOrDefault(0, 0);
+        }
+
+
+        private static (ImmutableDictionary<int, int>, int) Day19ProcessOneInstructions(
+            ImmutableDictionary<int, int> registers,
+            int instructionPointer,
+            int ipRegister,
+            ImmutableArray<(string Instruction, int A, int B, int C)> instructions)
+        {
+            registers = registers.SetItem(ipRegister, instructionPointer);
+            var instruction = instructions[instructionPointer];
+
+            var result = 0;
+            switch (instruction.Instruction)
+            {
+                case "addr":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        + registers.GetValueOrDefault(instruction.B, 0);
+                    break;
+                case "addi":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        + instruction.B;
+                    break;
+                case "mulr":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        * registers.GetValueOrDefault(instruction.B, 0);
+                    break;
+                case "muli":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        * instruction.B;
+                    break;
+                case "banr":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        & registers.GetValueOrDefault(instruction.B, 0);
+                    break;
+                case "bani":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        & instruction.B;
+                    break;
+                case "borr":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        | registers.GetValueOrDefault(instruction.B, 0);
+                    break;
+                case "bori":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        | instruction.B;
+                    break;
+                case "setr":
+                    result = registers.GetValueOrDefault(instruction.A, 0);
+                    break;
+                case "seti":
+                    result = instruction.A;
+                    break;
+                case "gtir":
+                    result = instruction.A
+                        > registers.GetValueOrDefault(instruction.B, 0) ? 1 : 0;
+                    break;
+                case "gtri":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        > instruction.B ? 1 : 0;
+                    break;
+                case "gtrr":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        > registers.GetValueOrDefault(instruction.B, 0) ? 1 : 0;
+                    break;
+                case "eqir":
+                    result = instruction.A
+                        == registers.GetValueOrDefault(instruction.B, 0) ? 1 : 0;
+                    break;
+                case "eqri":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        == instruction.B ? 1 : 0;
+                    break;
+                case "eqrr":
+                    result = registers.GetValueOrDefault(instruction.A, 0)
+                        == registers.GetValueOrDefault(instruction.B, 0) ? 1 : 0;
+                    break;
+                default:
+                    throw new InvalidOperationException($"Instruction: {instruction}");
+            }
+
+            registers = registers.SetItem(instruction.C, result);
+
+            instructionPointer = registers[ipRegister];
+            instructionPointer++;
+
+            return (registers, instructionPointer);
+        }
+
+
+        private static string Day19Part2(string input)
+        {
+            // Day 19 Part 2 requires decompiling and optimizing the assembly instructions
+
+            return "Try running 'node day19-3.js'";
         }
 
     }

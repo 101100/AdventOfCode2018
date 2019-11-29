@@ -56,7 +56,22 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        public static T Extrapolate<T>(this IEnumerable<T> input, int desiredIndex)
+        public static long ExtrapolateFromLinearity(this IEnumerable<int> input, long desiredIndex)
+        {
+            var firstFourCollinearValues = input
+                .Select((value, index) => (Value: value, Index: index))
+                .Window(4)
+                .First(states => states[3].Value - states[2].Value == states[2].Value - states[1].Value
+                    && states[2].Value - states[1].Value == states[1].Value - states[0].Value);
+
+            var slope = firstFourCollinearValues[3].Value - firstFourCollinearValues[2].Value;
+            var xIntercept = firstFourCollinearValues[0].Value - firstFourCollinearValues[0].Index * slope;
+
+            return slope * desiredIndex + xIntercept;
+        }
+
+
+        public static T ExtrapolateFromPattern<T>(this IEnumerable<T> input, long desiredIndex)
         {
             var initialState = (
                 SeenValues: ImmutableHashSet<T>.Empty,
@@ -97,7 +112,7 @@ namespace AdventOfCode2018.CSharp
                     })
                 .First(t => t.Confirmed);
 
-            return repeatValues[(desiredIndex - firstRepeat) % repeatValues.Count];
+            return repeatValues[(int) ((desiredIndex - firstRepeat) % repeatValues.Count)];
         }
 
 
@@ -326,16 +341,16 @@ namespace AdventOfCode2018.CSharp
 
         public static IEnumerable<ImmutableArray<T>> Window<T>(this IEnumerable<T> input, int batchSize)
         {
-            var curr = new List<T>(batchSize);
+            var curr = new LinkedList<T>();
 
             foreach (var item in input)
             {
-                curr.Add(item);
+                curr.AddLast(item);
 
                 if (curr.Count == batchSize)
                 {
                     yield return curr.ToImmutableArray();
-                    curr.RemoveAt(0);
+                    curr.RemoveFirst();
                 }
             }
         }

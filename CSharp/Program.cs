@@ -1050,7 +1050,7 @@ namespace AdventOfCode2018.CSharp
                     Result: parts[2][0]))
                 .ToImmutableDictionary(t => t.Input, t => t.Result);
 
-            var lastPlants = EnumerableExtensions
+            return EnumerableExtensions
                 .Generate(
                     initialState,
                     _ => true,
@@ -1060,15 +1060,8 @@ namespace AdventOfCode2018.CSharp
                             .Where(arr => arr.Length == 5)
                             .Select(chars => rules.GetValueOrDefault(new string(chars.ToArray()), '.')))
                         .Concat(Enumerable.Repeat('.', 2)))
-                .Select((state, index) => (Plants: state.Select((ch, i) => ch == '#' ? i - 20 : 0).Sum(), Generation: index))
-                .Window(4)
-                .First(states => states[3].Plants - states[2].Plants == states[2].Plants - states[1].Plants
-                    && states[2].Plants - states[1].Plants == states[1].Plants - states[0].Plants);
-
-            var m = lastPlants[3].Plants - lastPlants[2].Plants;
-            var b = lastPlants[0].Plants - (lastPlants[0].Generation * m);
-
-            return m * 50000000000L + b;
+                .Select(state => state.Select((ch, i) => ch == '#' ? i - 20 : 0).Sum())
+                .ExtrapolateFromLinearity(50000000000L);
         }
 
 
@@ -1874,7 +1867,7 @@ namespace AdventOfCode2018.CSharp
                     map => true,
                     Program.Day18GetNextMinute)
                 .Select(Program.Day18GetResourceValue)
-                .Extrapolate(1000000000);
+                .ExtrapolateFromPattern(1000000000);
         }
 
 

@@ -171,6 +171,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {cSharpOutput.Part2}");
 //                Console.WriteLine($"Part 2 (F#): {Day17.part2(input)}");
             }
+            else if (day == 18)
+            {
+                var input = Inputs.GetInput(18);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day18Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day18.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day18Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day18.part2(input)}");
+            }
             else if (day == 19)
             {
                 var input = Inputs.GetInput(19);
@@ -1767,6 +1776,121 @@ namespace AdventOfCode2018.CSharp
                     Program.Day17SpreadWaterDown(map, visited, maxX, maxY, sourceX: rightX, sourceY: sourceY);
                 }
             }
+        }
+
+
+        private static int Day18Part1(string input)
+        {
+            var startingMap = input
+                .SelectLines()
+                .Select(s => s.ToCharArray().ToImmutableArray())
+                .ToImmutableArray();
+
+            var maxRow = startingMap.Length - 1;
+            var maxCol = startingMap[0].Length - 1;
+
+            var finalMap = EnumerableExtensions
+                .Generate(
+                    startingMap,
+                    map => true,
+                    oldMap => oldMap
+                        .Select((row, rowIndex) => row
+                            .Select((ch, colIndex) =>
+                            {
+                                var (treeCount, lumberyardCount) = Program.Day18GetCounts(oldMap, rowIndex, colIndex, maxRow, maxCol);
+                                return ch == '.'
+                                    ? treeCount >= 3 ? '|' : '.'
+                                    : ch == '|'
+                                        ? lumberyardCount >= 3 ? '#' : '|'
+                                        : treeCount > 0 && lumberyardCount > 0 ? '#' : '.';
+                            })
+                            .ToImmutableArray())
+                        .ToImmutableArray())
+                .Skip(10)
+                .First();
+
+            return finalMap.Day18GetResourceValue();
+        }
+
+
+        private static (int TreeCount, int LumeryardCount) Day18GetCounts(
+            ImmutableArray<ImmutableArray<char>> oldMap,
+            int rowIndex,
+            int colIndex,
+            int maxRow,
+            int maxCol)
+        {
+            var treeCount = 0;
+            var lumberyardCount = 0;
+            for (var row = Math.Max(0, rowIndex - 1); row <= Math.Min(maxRow, rowIndex + 1); row++)
+            {
+                for (var col = Math.Max(0, colIndex - 1); col <= Math.Min(maxCol, colIndex + 1); col++)
+                {
+                    if (row != rowIndex || col != colIndex)
+                    {
+                        if (oldMap[row][col] == '|')
+                        {
+                            treeCount++;
+                        }
+                        else if (oldMap[row][col] == '#')
+                        {
+                            lumberyardCount++;
+                        }
+                    }
+                }
+            }
+
+            return (treeCount, lumberyardCount);
+        }
+
+
+        private static int Day18GetResourceValue(this ImmutableArray<ImmutableArray<char>> map)
+        {
+            var totalTreeCount = map
+                .SelectMany(s => s)
+                .Count(ch => ch == '|');
+
+            var totalLumberyardCount = map
+                .SelectMany(s => s)
+                .Count(ch => ch == '#');
+
+            return totalTreeCount * totalLumberyardCount;
+        }
+
+
+        private static int Day18Part2(string input)
+        {
+            var startingMap = input
+                .SelectLines()
+                .Select(s => s.ToCharArray().ToImmutableArray())
+                .ToImmutableArray();
+
+            var maxRow = startingMap.Length - 1;
+            var maxCol = startingMap[0].Length - 1;
+
+            var finalMap = EnumerableExtensions
+                .Generate(
+                    startingMap,
+                    map => true,
+                    oldMap => oldMap
+                        .Select((row, rowIndex) => row
+                            .Select((ch, colIndex) =>
+                            {
+                                var (treeCount, lumberyardCount) = Program.Day18GetCounts(oldMap, rowIndex, colIndex, maxRow, maxCol);
+                                return ch == '.'
+                                    ? treeCount >= 3 ? '|' : '.'
+                                    : ch == '|'
+                                        ? lumberyardCount >= 3 ? '#' : '|'
+                                        : treeCount > 0 && lumberyardCount > 0 ? '#' : '.';
+                            })
+                            .ToImmutableArray())
+                        .ToImmutableArray())
+                .Take(10000)
+                .Select((map, index) => (map.Day18GetResourceValue(), index))
+                .Debug()
+                .ToImmutableArray();
+
+            return 0;
         }
 
 

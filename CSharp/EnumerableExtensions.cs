@@ -56,6 +56,51 @@ namespace AdventOfCode2018.CSharp
         }
 
 
+        public static T Extrapolate<T>(this IEnumerable<T> input, int desiredIndex)
+        {
+            var initialState = (
+                SeenValues: ImmutableHashSet<T>.Empty,
+                RepeatValues: ImmutableList<T>.Empty,
+                FirstRepeat: -1,
+                NextRepeat: -1,
+                Confirmed: false);
+
+            var (_, repeatValues, firstRepeat, _, _) = input
+                .Scan(
+                    initialState,
+                    (acc, next, index) =>
+                    {
+                        if (acc.FirstRepeat == -1 && acc.SeenValues.Contains(next))
+                        {
+                            return (ImmutableHashSet<T>.Empty, acc.RepeatValues.Add(next), index, -1, false);
+                        }
+
+                        if (acc.NextRepeat != -1)
+                        {
+                            return index - acc.NextRepeat >= acc.RepeatValues.Count
+                                ? (acc.SeenValues, acc.RepeatValues, acc.FirstRepeat, acc.NextRepeat, true)
+                                : acc.RepeatValues[index - acc.NextRepeat].Equals(next)
+                                    ? acc
+                                    : initialState;
+                        }
+
+                        if (acc.FirstRepeat != -1)
+                        {
+                            return acc.RepeatValues[0].Equals(next)
+                                ? (ImmutableHashSet<T>.Empty, acc.RepeatValues, acc.FirstRepeat, index, false)
+                                : index <= acc.FirstRepeat * 2
+                                    ? (ImmutableHashSet<T>.Empty, acc.RepeatValues.Add(next), acc.FirstRepeat, -1, false)
+                                    : initialState;
+                        }
+
+                        return (acc.SeenValues.Add(next), acc.RepeatValues, -1, -1, false);
+                    })
+                .First(t => t.Confirmed);
+
+            return repeatValues[(desiredIndex - firstRepeat) % repeatValues.Count];
+        }
+
+
         public static IEnumerable<T> Generate<T>(T seed, Func<T, bool> predicate, Func<T, T> iterate, bool includeLast = false)
         {
             var next = seed;
@@ -114,6 +159,23 @@ namespace AdventOfCode2018.CSharp
             foreach (var item in input)
             {
                 state = update(state, item);
+                yield return state;
+            }
+        }
+
+
+        public static IEnumerable<TScan> Scan<TInput, TScan>(
+            this IEnumerable<TInput> input,
+            TScan seed,
+            Func<TScan, TInput, int, TScan> update)
+        {
+            var state = seed;
+
+            var index = 0;
+            foreach (var item in input)
+            {
+                state = update(state, item, index);
+                index++;
                 yield return state;
             }
         }

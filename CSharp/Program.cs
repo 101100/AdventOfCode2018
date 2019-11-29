@@ -1783,29 +1783,13 @@ namespace AdventOfCode2018.CSharp
         {
             var startingMap = input
                 .SelectLines()
-                .Select(s => s.ToCharArray().ToImmutableArray())
                 .ToImmutableArray();
-
-            var maxRow = startingMap.Length - 1;
-            var maxCol = startingMap[0].Length - 1;
 
             var finalMap = EnumerableExtensions
                 .Generate(
                     startingMap,
                     map => true,
-                    oldMap => oldMap
-                        .Select((row, rowIndex) => row
-                            .Select((ch, colIndex) =>
-                            {
-                                var (treeCount, lumberyardCount) = Program.Day18GetCounts(oldMap, rowIndex, colIndex, maxRow, maxCol);
-                                return ch == '.'
-                                    ? treeCount >= 3 ? '|' : '.'
-                                    : ch == '|'
-                                        ? lumberyardCount >= 3 ? '#' : '|'
-                                        : treeCount > 0 && lumberyardCount > 0 ? '#' : '.';
-                            })
-                            .ToImmutableArray())
-                        .ToImmutableArray())
+                    Program.Day18GetNextMinute)
                 .Skip(10)
                 .First();
 
@@ -1813,8 +1797,28 @@ namespace AdventOfCode2018.CSharp
         }
 
 
+        private static ImmutableArray<string> Day18GetNextMinute(this ImmutableArray<string> oldMap)
+        {
+            var maxRow = oldMap.Length - 1;
+            var maxCol = oldMap[0].Length - 1;
+
+            return oldMap
+                .Select((row, rowIndex) => string.Concat(row
+                    .Select((ch, colIndex) =>
+                    {
+                        var (treeCount, lumberyardCount) = Program.Day18GetCounts(oldMap, rowIndex, colIndex, maxRow, maxCol);
+                        return ch == '.'
+                            ? treeCount >= 3 ? '|' : '.'
+                            : ch == '|'
+                                ? lumberyardCount >= 3 ? '#' : '|'
+                                : treeCount > 0 && lumberyardCount > 0 ? '#' : '.';
+                    })))
+                .ToImmutableArray();
+        }
+
+
         private static (int TreeCount, int LumeryardCount) Day18GetCounts(
-            ImmutableArray<ImmutableArray<char>> oldMap,
+            ImmutableArray<string> oldMap,
             int rowIndex,
             int colIndex,
             int maxRow,
@@ -1844,7 +1848,7 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        private static int Day18GetResourceValue(this ImmutableArray<ImmutableArray<char>> map)
+        private static int Day18GetResourceValue(this ImmutableArray<string> map)
         {
             var totalTreeCount = map
                 .SelectMany(s => s)
@@ -1862,35 +1866,15 @@ namespace AdventOfCode2018.CSharp
         {
             var startingMap = input
                 .SelectLines()
-                .Select(s => s.ToCharArray().ToImmutableArray())
                 .ToImmutableArray();
 
-            var maxRow = startingMap.Length - 1;
-            var maxCol = startingMap[0].Length - 1;
-
-            var finalMap = EnumerableExtensions
+            return EnumerableExtensions
                 .Generate(
                     startingMap,
                     map => true,
-                    oldMap => oldMap
-                        .Select((row, rowIndex) => row
-                            .Select((ch, colIndex) =>
-                            {
-                                var (treeCount, lumberyardCount) = Program.Day18GetCounts(oldMap, rowIndex, colIndex, maxRow, maxCol);
-                                return ch == '.'
-                                    ? treeCount >= 3 ? '|' : '.'
-                                    : ch == '|'
-                                        ? lumberyardCount >= 3 ? '#' : '|'
-                                        : treeCount > 0 && lumberyardCount > 0 ? '#' : '.';
-                            })
-                            .ToImmutableArray())
-                        .ToImmutableArray())
-                .Take(10000)
-                .Select((map, index) => (map.Day18GetResourceValue(), index))
-                .Debug()
-                .ToImmutableArray();
-
-            return 0;
+                    Program.Day18GetNextMinute)
+                .Select(Program.Day18GetResourceValue)
+                .Extrapolate(1000000000);
         }
 
 

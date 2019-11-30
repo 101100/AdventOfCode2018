@@ -161,6 +161,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day15Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day15.part2(input)}");
             }
+            else if (day == 16)
+            {
+                var input = Inputs.GetInput(16);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day16Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day16.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day16Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day16.part2(input)}");
+            }
             else if (day == 17)
             {
                 var input = Inputs.GetInput(17);
@@ -1576,6 +1585,230 @@ namespace AdventOfCode2018.CSharp
                 .Select(elfPower => Program.Day15SimulateBattle(inputLines, elfPower))
                 .First(t => t.DeadElves == 0)
                 .Outcome;
+        }
+
+
+        private static ImmutableArray<string> Day16PossibleInstructions = new[]
+        {
+            "addr",
+            "addi",
+            "mulr",
+            "muli",
+            "banr",
+            "bani",
+            "borr",
+            "bori",
+            "setr",
+            "seti",
+            "gtir",
+            "gtri",
+            "gtrr",
+            "eqir",
+            "eqri",
+            "eqrr"
+        }.ToImmutableArray();
+
+
+        private static int Day16Part1(string input)
+        {
+            var samples = input
+                .SelectLines()
+                .Day16ExtractSamples();
+
+            return samples
+                .Count(sample => Program.Day16PossibleInstructions
+                    .Select(instr => (
+                        InstructionString: instr,
+                        ActualAfter: Program.Day16ProcessOneInstruction(sample.Before, instr, sample.Instruction.A, sample.Instruction.B, sample.Instruction.C)))
+                    .Count(t => sample.After.ToRegistersString().Equals(t.ActualAfter.ToRegistersString())) >= 3);
+        }
+
+
+        private static ImmutableArray<(ImmutableDictionary<int, int> Before, ImmutableDictionary<int, int> After, (int OpCode, int A, int B, int C) Instruction)> Day16ExtractSamples(this IEnumerable<string> inputLines)
+        {
+            return inputLines
+                .Batch(3)
+                .Where(batch => batch.Length == 3 && batch[0].StartsWith("Before"))
+                .Select(batch =>
+                {
+                    var before = batch[0]
+                        .Substring(9, 10)
+                        .Split(",")
+                        .Select((s, i) => (Register: i, Value: int.Parse(s.Trim())))
+                        .ToImmutableDictionary(t => t.Register, t => t.Value);
+                    var instruction = batch[1]
+                        .Split(" ")
+                        .Select(s => int.Parse(s.Trim()))
+                        .ToImmutableArray();
+                    var after = batch[2]
+                        .Substring(9, 10)
+                        .Split(",")
+                        .Select((s, i) => (Register: i, Value: int.Parse(s.Trim())))
+                        .ToImmutableDictionary(t => t.Register, t => t.Value);
+
+                    return (
+                        Before: before,
+                        After: after,
+                        Instruction: (
+                            OpCode: instruction[0],
+                            A: instruction[1],
+                            B: instruction[2],
+                            C: instruction[3]));
+                })
+                .ToImmutableArray();
+        }
+
+
+        private static ImmutableDictionary<int, int> Day16ProcessOneInstruction(
+            ImmutableDictionary<int, int> registers,
+            string instruction,
+            int a,
+            int b,
+            int c)
+        {
+            var result = 0;
+            switch (instruction)
+            {
+                case "addr":
+                    result = registers.GetValueOrDefault(a, 0)
+                        + registers.GetValueOrDefault(b, 0);
+                    break;
+                case "addi":
+                    result = registers.GetValueOrDefault(a, 0)
+                        + b;
+                    break;
+                case "mulr":
+                    result = registers.GetValueOrDefault(a, 0)
+                        * registers.GetValueOrDefault(b, 0);
+                    break;
+                case "muli":
+                    result = registers.GetValueOrDefault(a, 0)
+                        * b;
+                    break;
+                case "banr":
+                    result = registers.GetValueOrDefault(a, 0)
+                        & registers.GetValueOrDefault(b, 0);
+                    break;
+                case "bani":
+                    result = registers.GetValueOrDefault(a, 0)
+                        & b;
+                    break;
+                case "borr":
+                    result = registers.GetValueOrDefault(a, 0)
+                        | registers.GetValueOrDefault(b, 0);
+                    break;
+                case "bori":
+                    result = registers.GetValueOrDefault(a, 0)
+                        | b;
+                    break;
+                case "setr":
+                    result = registers.GetValueOrDefault(a, 0);
+                    break;
+                case "seti":
+                    result = a;
+                    break;
+                case "gtir":
+                    result = a
+                        > registers.GetValueOrDefault(b, 0) ? 1 : 0;
+                    break;
+                case "gtri":
+                    result = registers.GetValueOrDefault(a, 0)
+                        > b ? 1 : 0;
+                    break;
+                case "gtrr":
+                    result = registers.GetValueOrDefault(a, 0)
+                        > registers.GetValueOrDefault(b, 0) ? 1 : 0;
+                    break;
+                case "eqir":
+                    result = a
+                        == registers.GetValueOrDefault(b, 0) ? 1 : 0;
+                    break;
+                case "eqri":
+                    result = registers.GetValueOrDefault(a, 0)
+                        == b ? 1 : 0;
+                    break;
+                case "eqrr":
+                    result = registers.GetValueOrDefault(a, 0)
+                        == registers.GetValueOrDefault(b, 0) ? 1 : 0;
+                    break;
+                default:
+                    throw new InvalidOperationException($"Instruction: {instruction}");
+            }
+
+            return registers.SetItem(c, result);
+        }
+
+
+        private static int Day16Part2(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            var samples = inputLines
+                .Day16ExtractSamples();
+
+            var possiblePairings = samples
+                .SelectMany(sample => Program.Day16PossibleInstructions
+                    .Select(instr => (
+                        sample.After,
+                        sample.Instruction,
+                        InstructionString: instr,
+                        ActualAfter: Program.Day16ProcessOneInstruction(sample.Before, instr, sample.Instruction.A, sample.Instruction.B, sample.Instruction.C))))
+                .Where(t => t.After.ToRegistersString().Equals(t.ActualAfter.ToRegistersString()))
+                .Select(t => (
+                    t.Instruction.OpCode,
+                    t.InstructionString))
+                .Distinct()
+                .ToImmutableArray();
+
+            var opCodeToPossibleStrings = possiblePairings
+                .GroupBy(t => t.OpCode)
+                .ToImmutableDictionary(g => g.Key, g => g.Select(t => t.InstructionString).ToImmutableHashSet());
+
+            while (opCodeToPossibleStrings.Any(p => p.Value.Count > 1))
+            {
+                var opCodesWithOneString = opCodeToPossibleStrings
+                    .Where(p => p.Value.Count == 1)
+                    .SelectMany(p => p.Value)
+                    .ToImmutableArray();
+
+                if (opCodesWithOneString.Length > 0)
+                {
+                    opCodeToPossibleStrings = opCodeToPossibleStrings
+                        .Select(p => (
+                            OpCode: p.Key,
+                            Possibilities: p.Value.Count == 1
+                                ? p.Value
+                                : p.Value.Except(opCodesWithOneString)))
+                        .ToImmutableDictionary(t => t.OpCode, t => t.Possibilities);
+                }
+            }
+
+            // Console.WriteLine(string.Join("\n", opCodeToPossibleStrings.Select(p => $"{p.Key}: {string.Join(", ", p.Value)}")));
+
+            var instructions = inputLines
+                .Skip(samples.Length * 3)
+                .Select(line =>
+                {
+                    var instruction = line
+                        .Split(" ")
+                        .Select(s => int.Parse(s.Trim()))
+                        .ToImmutableArray();
+
+                    return (
+                        OpCode: instruction[0],
+                        A: instruction[1],
+                        B: instruction[2],
+                        C: instruction[3]);
+                })
+                .ToImmutableArray();
+
+            var finalState = instructions
+                .Aggregate(ImmutableDictionary<int, int>.Empty,
+                    (registers, instruction) => Program.Day16ProcessOneInstruction(registers, opCodeToPossibleStrings[instruction.OpCode].First(), instruction.A, instruction.B, instruction.C));
+
+            return finalState.GetValueOrDefault(0, 0);
         }
 
 

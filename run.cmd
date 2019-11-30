@@ -1,1 +1,1 @@
-@dotnet run -p %~dp0CSharp/AdventOfCode2018.CSharp.csproj %*
+@dotnet %~dp0CSharp/bin/Debug/netcoreapp2.0/AdventOfCode2018.CSharp.dll %*

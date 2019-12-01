@@ -207,6 +207,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day20Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day20.part2(input)}");
             }
+            else if (day == 21)
+            {
+                var input = Inputs.GetInput(21);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day21Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day21.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day21Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day21.part2(input)}");
+            }
             else if (day == 22)
             {
                 var depth = 11739;
@@ -2278,6 +2287,51 @@ namespace AdventOfCode2018.CSharp
             }
 
             return farCount;
+        }
+
+
+        private static int Day21Part1(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            var ipRegister = int.Parse(inputLines[0].Split(" ")[1]);
+
+            var instructions = inputLines
+                .Skip(1)
+                .Select(line => line.Split(" "))
+                .Select(parts => (
+                    Instruction: parts[0],
+                    A: int.Parse(parts[1]),
+                    B: int.Parse(parts[2]),
+                    C: int.Parse(parts[3])))
+                .ToImmutableArray();
+
+            var stateAtLine28 = EnumerableExtensions
+                .Generate(
+                    (
+                        Registers: ImmutableDictionary<int, int>.Empty,
+                        InstructionPointer: 0
+                    ),
+                    state => state.InstructionPointer >= 0 && state.InstructionPointer < instructions.Length,
+                    state => Program.Day19ProcessOneInstruction(state.Registers, state.InstructionPointer, ipRegister, instructions),
+                    includeLast: true)
+                .SkipWhile(state => state.InstructionPointer != 28)
+                .Take(1)
+                .Last();
+
+            // At line 28, the program halts if register 0 equals register 1.
+            return stateAtLine28.Registers[1];
+        }
+
+
+        private static string Day21Part2(string input)
+        {
+            // Day 21 Part 2 was solved by decompiling and optimizing the
+            // assembly instructions to find the end condition.
+
+            return "Try running 'node day21-3.js'";
         }
 
 

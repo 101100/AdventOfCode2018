@@ -46,11 +46,15 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        public static IEnumerable<T> Debug<T>(this IEnumerable<T> input, string label = null, Func<T, string> printer = null)
+        public static IEnumerable<T> Debug<T>(this IEnumerable<T> input, string label = null, Func<T, string> printer = null, Func<T, bool> condition = null)
         {
             foreach (var item in input)
             {
-                Console.WriteLine($"{label ?? "Got value"}: '{(printer == null ? item.ToString() : printer(item))}'");
+                if (condition is null || condition(item))
+                {
+                    Console.WriteLine($"{label ?? "Got value"}: '{(printer == null ? item.ToString() : printer(item))}'");
+                }
+
                 yield return item;
             }
         }

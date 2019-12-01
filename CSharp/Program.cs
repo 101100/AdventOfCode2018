@@ -2138,7 +2138,7 @@ namespace AdventOfCode2018.CSharp
                         InstructionPointer: 0
                     ),
                     state => state.InstructionPointer >= 0 && state.InstructionPointer < instructions.Length,
-                    state => Program.Day19ProcessOneInstructions(state.Registers, state.InstructionPointer, ipRegister, instructions),
+                    state => Program.Day19ProcessOneInstruction(state.Registers, state.InstructionPointer, ipRegister, instructions),
                     includeLast: true)
                 .Last();
 
@@ -2146,85 +2146,16 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        private static (ImmutableDictionary<int, int>, int) Day19ProcessOneInstructions(
+        private static (ImmutableDictionary<int, int>, int) Day19ProcessOneInstruction(
             ImmutableDictionary<int, int> registers,
             int instructionPointer,
             int ipRegister,
             ImmutableArray<(string Instruction, int A, int B, int C)> instructions)
         {
             registers = registers.SetItem(ipRegister, instructionPointer);
-            var instruction = instructions[instructionPointer];
+            var (instruction, a, b, c) = instructions[instructionPointer];
 
-            var result = 0;
-            switch (instruction.Instruction)
-            {
-                case "addr":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        + registers.GetValueOrDefault(instruction.B, 0);
-                    break;
-                case "addi":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        + instruction.B;
-                    break;
-                case "mulr":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        * registers.GetValueOrDefault(instruction.B, 0);
-                    break;
-                case "muli":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        * instruction.B;
-                    break;
-                case "banr":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        & registers.GetValueOrDefault(instruction.B, 0);
-                    break;
-                case "bani":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        & instruction.B;
-                    break;
-                case "borr":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        | registers.GetValueOrDefault(instruction.B, 0);
-                    break;
-                case "bori":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        | instruction.B;
-                    break;
-                case "setr":
-                    result = registers.GetValueOrDefault(instruction.A, 0);
-                    break;
-                case "seti":
-                    result = instruction.A;
-                    break;
-                case "gtir":
-                    result = instruction.A
-                        > registers.GetValueOrDefault(instruction.B, 0) ? 1 : 0;
-                    break;
-                case "gtri":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        > instruction.B ? 1 : 0;
-                    break;
-                case "gtrr":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        > registers.GetValueOrDefault(instruction.B, 0) ? 1 : 0;
-                    break;
-                case "eqir":
-                    result = instruction.A
-                        == registers.GetValueOrDefault(instruction.B, 0) ? 1 : 0;
-                    break;
-                case "eqri":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        == instruction.B ? 1 : 0;
-                    break;
-                case "eqrr":
-                    result = registers.GetValueOrDefault(instruction.A, 0)
-                        == registers.GetValueOrDefault(instruction.B, 0) ? 1 : 0;
-                    break;
-                default:
-                    throw new InvalidOperationException($"Instruction: {instruction}");
-            }
-
-            registers = registers.SetItem(instruction.C, result);
+            registers = Program.Day16ProcessOneInstruction(registers, instruction, a, b, c);
 
             instructionPointer = registers[ipRegister];
             instructionPointer++;

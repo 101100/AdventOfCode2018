@@ -198,6 +198,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day19Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day19.part2(input)}");
             }
+            else if (day == 20)
+            {
+                var input = Inputs.GetInput(20);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day20Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day20.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day20Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day20.part2(input)}");
+            }
             else if (day == 22)
             {
                 var depth = 11739;
@@ -2229,6 +2238,115 @@ namespace AdventOfCode2018.CSharp
             // Day 19 Part 2 requires decompiling and optimizing the assembly instructions
 
             return "Try running 'node day19-3.js'";
+        }
+
+
+        private static int Day20Part1(string input)
+        {
+            var inputTrimmed = input
+                .Trim()
+                .Substring(1);
+
+            var openingDistances = new Stack<int>();
+            var openingMaxDistances = new Stack<int>();
+            var currentDistance = 0;
+            var maxDistance = 0;
+            var lastBlank = false;
+
+            foreach (var ch in inputTrimmed)
+            {
+                switch (ch)
+                {
+                    case '(':
+                        openingDistances.Push(currentDistance);
+                        openingMaxDistances.Push(maxDistance);
+                        break;
+                    case '|':
+                        currentDistance = openingDistances.Peek();
+                        lastBlank = true;
+                        break;
+                    case ')':
+                        openingDistances.Pop();
+                        if (lastBlank)
+                        {
+                            maxDistance = openingMaxDistances.Pop();
+                        }
+                        break;
+                    case '$':
+                        break;
+                    default:
+                        currentDistance++;
+                        lastBlank = false;
+                        if (currentDistance > maxDistance)
+                        {
+                            maxDistance = currentDistance;
+                        }
+                        break;
+                }
+            }
+
+            return maxDistance;
+        }
+
+
+        private static int Day20Part2(string input)
+        {
+            var inputTrimmed = input
+                .Trim()
+                .Substring(1);
+
+            var openingDistances = new Stack<int>();
+            var openingPositions = new Stack<(int X, int Y)>();
+            var seenPositions = ImmutableHashSet<(int X, int Y)>.Empty;
+            var currentDistance = 0;
+            var position = (X: 0, Y: 0);
+            var farCount = 0;
+
+            seenPositions = seenPositions.Add(position);
+
+            foreach (var ch in inputTrimmed)
+            {
+                switch (ch)
+                {
+                    case '(':
+                        openingDistances.Push(currentDistance);
+                        openingPositions.Push(position);
+                        break;
+                    case '|':
+                        currentDistance = openingDistances.Peek();
+                        position = openingPositions.Peek();
+                        break;
+                    case ')':
+                        openingDistances.Pop();
+                        openingPositions.Pop();
+                        break;
+                    case '$':
+                        break;
+                    case 'N':
+                        position = (position.X, position.Y + 1);
+                        goto default;
+                    case 'E':
+                        position = (position.X + 1, position.Y);
+                        goto default;
+                    case 'S':
+                        position = (position.X, position.Y - 1);
+                        goto default;
+                    case 'W':
+                        position = (position.X - 1, position.Y);
+                        goto default;
+                    default:
+                        currentDistance++;
+                        if (currentDistance >= 1000 && !seenPositions.Contains(position))
+                        {
+                            farCount++;
+                        }
+
+                        seenPositions = seenPositions.Add(position);
+                        break;
+                }
+            }
+
+            return farCount;
         }
 
 

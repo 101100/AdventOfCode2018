@@ -226,6 +226,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day22Part2(depth, target)}");
 //                Console.WriteLine($"Part 2 (F#): {Day22.part2(input)}");
             }
+            else if (day == 24)
+            {
+                var input = Inputs.GetInput(24);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day24Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day24.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day24Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day24.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -2518,6 +2527,290 @@ namespace AdventOfCode2018.CSharp
             {
                 possibilities.Add(newKey, (newCostToLocation, newHeuristicCost, false));
             }
+        }
+
+
+        private static int Day24Part1(string input)
+        {
+            var (immuneGroups, infectionGroups) = Program.Day24ReadData(input);
+
+            var (immuneUnitsRemaining, infectionUnitsRemaining) = Program.Day24ProcessBattle(immuneGroups, infectionGroups);
+
+            return Math.Max(immuneUnitsRemaining, infectionUnitsRemaining);
+        }
+
+
+        private static (int ImmuneUnitsRemaining, int InfectionUnitsRemaining) Day24ProcessBattle(
+            ImmutableArray<Day24Group> immuneGroups,
+            ImmutableArray<Day24Group> infectionGroups)
+        {
+            while (immuneGroups.Count(t => t.Count > 0) > 0 && infectionGroups.Count(t => t.Count > 0) > 0)
+            {
+                var attacks = Program.Day24GetAttacks(infectionGroups, immuneGroups, "infect")
+                    .Concat(Program.Day24GetAttacks(immuneGroups, infectionGroups, "immune"));
+
+                var anyDeaths = false;
+                foreach (var attack in attacks.OrderByDescending(t => t.AttackingInitiative))
+                {
+                    var attacker = attack.Group == "infect"
+                        ? infectionGroups[attack.AttackingIndex]
+                        : immuneGroups[attack.AttackingIndex];
+                    if (attack.DefenderIndex == -1)
+                    {
+                        continue;
+                    }
+                    var defender = attack.Group == "infect"
+                        ? immuneGroups[attack.DefenderIndex]
+                        : infectionGroups[attack.DefenderIndex];
+                    var rawDamage = attacker.Count * attacker.Damage;
+                    // attacker will never pick defender that is immune
+                    var damage = defender.Weaknesses.Contains(attacker.DamageType)
+                        ? rawDamage * 2
+                        : rawDamage;
+                    var deaths = damage / defender.HitPoints;
+
+                    if (deaths <= 0)
+                    {
+                        continue;
+                    }
+
+                    anyDeaths = true;
+                    var newDefender = defender.WithDecreasedCount(deaths);
+                    if (attack.Group == "infect")
+                    {
+                        immuneGroups = immuneGroups.SetItem(attack.DefenderIndex, newDefender);
+                    }
+                    else
+                    {
+                        infectionGroups = infectionGroups.SetItem(attack.DefenderIndex, newDefender);
+                    }
+                }
+
+                if (!anyDeaths)
+                {
+                    break;
+                }
+            }
+
+            return (
+                ImmuneUnitsRemaining: immuneGroups
+                    .Where(t => t.Count > 0)
+                    .Sum(t => t.Count),
+                InfectionUnitsRemaining: infectionGroups
+                    .Where(t => t.Count > 0)
+                    .Sum(t => t.Count));
+        }
+
+
+        private static (ImmutableArray<Day24Group> ImmuneGroups, ImmutableArray<Day24Group> InfectionGroups) Day24ReadData(string input)
+        {
+            var inputLines = input
+                .SelectLines()
+                .ToImmutableArray();
+
+            var infectionStartLine = inputLines
+                .Select((line, index) => (Line: line, Index: index))
+                .First(t => t.Line.StartsWith("Infection:"))
+                .Index;
+
+            var immuneGroups = inputLines
+                .Skip(1)
+                .Take(infectionStartLine - 1)
+                .Select(Program.Day24ParseUnits)
+                .ToImmutableArray();
+
+            var infectionGroups = inputLines
+                .Skip(infectionStartLine + 1)
+                .Select(Program.Day24ParseUnits)
+                .ToImmutableArray();
+
+            return (
+                immuneGroups,
+                infectionGroups);
+        }
+
+
+        private static Day24Group Day24ParseUnits(string line, int index)
+        {
+            var parts = line.Split(" ");
+            var count = int.Parse(parts[0]);
+            var hitPoints = int.Parse(parts[4]);
+            var damage = int.Parse(parts[parts.Length - 6]);
+            var damageType = parts[parts.Length - 5];
+            var initiative = int.Parse(parts[parts.Length - 1]);
+
+            var weaknesses = new List<string>();
+            var immunities = new List<string>();
+            if (parts[7].StartsWith("(immune"))
+            {
+                var next = 9;
+                while (parts[next] != "weak" && parts[next] != "with")
+                {
+                    var thing = parts[next].Trim(',', ';', ')');
+                    immunities.Add(thing);
+                    next++;
+                }
+
+                if (parts[next] == "weak")
+                {
+                    next += 2;
+                    while (parts[next] != "with")
+                    {
+                        var thing = parts[next].Trim(',', ';', ')');
+                        weaknesses.Add(thing);
+                        next++;
+                    }
+                }
+            }
+            if (parts[7].StartsWith("(weak"))
+            {
+                var next = 9;
+                while (parts[next] != "immune" && parts[next] != "with")
+                {
+                    var thing = parts[next].Trim(',', ';', ')');
+                    weaknesses.Add(thing);
+                    next++;
+                }
+
+                if (parts[next] == "immune")
+                {
+                    next += 2;
+                    while (parts[next] != "with")
+                    {
+                        var thing = parts[next].Trim(',', ';', ')');
+                        immunities.Add(thing);
+                        next++;
+                    }
+                }
+            }
+
+            return new Day24Group(
+                index: index,
+                count: count,
+                hitPoints: hitPoints,
+                damage: damage,
+                damageType: damageType,
+                initiative: initiative,
+                weaknesses: weaknesses,
+                immunities: immunities);
+        }
+
+
+        private static IEnumerable<(string Group, int AttackingInitiative, int AttackingIndex, int DefenderIndex)> Day24GetAttacks(
+            ImmutableArray<Day24Group> attackingGroups,
+            ImmutableArray<Day24Group> defendingGroups,
+            string attackingGroupName)
+        {
+            var selectedDefenders = new HashSet<int>();
+
+            return attackingGroups
+                .OrderByDescending(attackingGroup => attackingGroup.Count * attackingGroup.Damage)
+                .ThenByDescending(attackingGroup => attackingGroup.Initiative)
+                .Select(attackingGroup => (
+                    Group: attackingGroupName,
+                    AttackingInitiative: attackingGroup.Initiative,
+                    AttackingIndex: attackingGroup.Index,
+                    DefenderIndex: Program.Day24GetDefenderIndex(attackingGroup, defendingGroups, selectedDefenders)));
+        }
+
+
+        private static int Day24GetDefenderIndex(
+            Day24Group attackingGroup,
+            ImmutableArray<Day24Group> defendingGroups,
+            HashSet<int> selectedDefenderIndices)
+        {
+            var rawDamage = attackingGroup.Count * attackingGroup.Damage;
+
+            var defenderArray = defendingGroups
+                .Where(defender => defender.Count > 0
+                    && !defender.Immunities.Contains(attackingGroup.DamageType)
+                    && !selectedDefenderIndices.Contains(defender.Index))
+                .OrderByDescending(defender =>
+                    defender.Weaknesses.Contains(attackingGroup.DamageType) ? rawDamage * 2 : rawDamage)
+                .ThenByDescending(defender => defender.Count * defender.Damage)
+                .ThenByDescending(defender => defender.Initiative)
+                .Take(1)
+                .ToImmutableArray();
+
+            var defenderIndex = defenderArray.Length == 1 ? defenderArray[0].Index : -1;
+            selectedDefenderIndices.Add(defenderIndex);
+
+            return defenderIndex;
+        }
+
+
+        private sealed class Day24Group
+        {
+
+            public Day24Group(int index, int count, int hitPoints, int damage, string damageType, int initiative, IEnumerable<string> weaknesses, IEnumerable<string> immunities)
+            {
+                this.Index = index;
+                this.Count = count;
+                this.HitPoints = hitPoints;
+                this.Damage = damage;
+                this.DamageType = damageType;
+                this.Initiative = initiative;
+                this.Weaknesses = weaknesses.ToImmutableHashSet();
+                this.Immunities = immunities.ToImmutableHashSet();
+            }
+
+            public int Index { get; }
+            public int Count { get; }
+            public int HitPoints { get; }
+            public int Damage { get; }
+            public string DamageType { get; }
+            public int Initiative { get; }
+            public ImmutableHashSet<string> Weaknesses { get; }
+            public ImmutableHashSet<string> Immunities { get; }
+
+            public Day24Group WithBoost(int boost)
+            {
+                return new Day24Group(
+                    index: this.Index,
+                    count: this.Count,
+                    hitPoints: this.HitPoints,
+                    damage: this.Damage + boost,
+                    damageType: this.DamageType,
+                    initiative: this.Initiative,
+                    weaknesses: this.Weaknesses,
+                    immunities: this.Immunities);
+            }
+
+            public Day24Group WithDecreasedCount(int decrease)
+            {
+                return new Day24Group(
+                    index: this.Index,
+                    count: Math.Max(0, this.Count - decrease),
+                    hitPoints: this.HitPoints,
+                    damage: this.Damage,
+                    damageType: this.DamageType,
+                    initiative: this.Initiative,
+                    weaknesses: this.Weaknesses,
+                    immunities: this.Immunities);
+            }
+
+        }
+
+
+        private static int Day24Part2(string input)
+        {
+            var (immuneGroups, infectionGroups) = Program.Day24ReadData(input);
+
+            return Enumerable.Range(0, 1000)
+                .Select(immuneBoost =>
+                {
+                    var battleResult = Program.Day24ProcessBattle(
+                        immuneGroups
+                            .Select(g => g.WithBoost(immuneBoost))
+                            .ToImmutableArray(),
+                        infectionGroups);
+                    return (
+                        battleResult.ImmuneUnitsRemaining,
+                        battleResult.InfectionUnitsRemaining,
+                        Boost: immuneBoost);
+                })
+                .First(t => t.ImmuneUnitsRemaining > 0 && t.InfectionUnitsRemaining == 0)
+                .ImmuneUnitsRemaining;
         }
 
     }

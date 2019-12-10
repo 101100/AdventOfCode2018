@@ -235,6 +235,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day24Part2(input)}");
 //                Console.WriteLine($"Part 2 (F#): {Day24.part2(input)}");
             }
+            else if (day == 25)
+            {
+                var input = Inputs.GetInput(25);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day25Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day25.part1(input)}");
+//                Console.WriteLine($"Part 2 (C#): {Program.Day25Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day25.part2(input)}");
+            }
             else
             {
                 Console.WriteLine($"I've never heard of day '{day}', sorry.");
@@ -2811,6 +2820,48 @@ namespace AdventOfCode2018.CSharp
                 })
                 .First(t => t.ImmuneUnitsRemaining > 0 && t.InfectionUnitsRemaining == 0)
                 .ImmuneUnitsRemaining;
+        }
+
+
+        private static int Day25Part1(string input)
+        {
+            var fixedPoints = input
+                .SelectLines()
+                .Select(line => line.Split(","))
+                .Select((parts, index) => (
+                    Coordinates: parts.Select(int.Parse).ToImmutableArray(),
+                    ConstellationNumber: index))
+                .ToImmutableArray();
+
+            var constellations = fixedPoints
+                .Aggregate(
+                    fixedPoints,
+                    (acc, fixedPoint) =>
+                    {
+                        var numbersToReplace = acc
+                            .Where(t => Program.Day25Distance(fixedPoint.Coordinates, t.Coordinates) <= 3)
+                            .Select(t => t.ConstellationNumber)
+                            .ToImmutableHashSet();
+
+                        return acc
+                            .Select(t => (
+                                t.Coordinates,
+                                numbersToReplace.Contains(t.ConstellationNumber) ? fixedPoint.ConstellationNumber : t.ConstellationNumber))
+                            .ToImmutableArray();
+                    });
+
+            return constellations
+                .Select(t => t.ConstellationNumber)
+                .Distinct()
+                .Count();
+        }
+
+
+        private static int Day25Distance(ImmutableArray<int> fixedPoint1, ImmutableArray<int> fixedPoint2)
+        {
+            return fixedPoint1
+                .Zip(fixedPoint2, (a, b) => Math.Abs(a - b))
+                .Sum();
         }
 
     }

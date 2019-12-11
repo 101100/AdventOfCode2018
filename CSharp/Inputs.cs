@@ -21,6 +21,7 @@ namespace AdventOfCode2018.CSharp
                 "..",
                 "..",
                 "..",
+                "inputs",
                 filename));
         }
 

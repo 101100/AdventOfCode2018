@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using AdventOfCode2018.FSharp;
@@ -82,18 +83,14 @@ namespace AdventOfCode2018.CSharp
                 var input = Inputs.GetInput(7);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day7Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day7.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day7Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day7.part2(input)}");
             }
             else if (day == 8)
             {
                 var input = Inputs.GetInput(8);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day8Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day8.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day8Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day8.part2(input)}");
             }
             else if (day == 9)
             {
@@ -103,72 +100,56 @@ namespace AdventOfCode2018.CSharp
                 var lastMarble = int.Parse(inputParts[6]);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day9Part1(players, lastMarble)}");
-//                Console.WriteLine($"Part 1 (F#): {Day9.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day9Part2(players, lastMarble)}");
-//                Console.WriteLine($"Part 2 (F#): {Day9.part2(input)}");
             }
             else if (day == 10)
             {
                 var input = Inputs.GetInput(10);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day10Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day10.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day10Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day10.part2(input)}");
             }
             else if (day == 11)
             {
                 var input = 5791;
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day11Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day11.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day11Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day11.part2(input)}");
             }
             else if (day == 12)
             {
                 var input = Inputs.GetInput(12);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day12Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day12.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day12Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day12.part2(input)}");
             }
             else if (day == 13)
             {
                 var input = Inputs.GetInput(13);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day13Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day13.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day13Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day13.part2(input)}");
             }
             else if (day == 14)
             {
                 var input = "030121";
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day14Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day14.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day14Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day14.part2(input)}");
             }
             else if (day == 15)
             {
                 var input = Inputs.GetInput(15);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day15Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day15.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day15Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day15.part2(input)}");
             }
             else if (day == 16)
             {
                 var input = Inputs.GetInput(16);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day16Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day16.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day16Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day16.part2(input)}");
             }
             else if (day == 17)
             {
@@ -176,45 +157,35 @@ namespace AdventOfCode2018.CSharp
                 var cSharpOutput = Program.Day17(input);
 
                 Console.WriteLine($"Part 1 (C#): {cSharpOutput.Part1}");
-//                Console.WriteLine($"Part 1 (F#): {Day17.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {cSharpOutput.Part2}");
-//                Console.WriteLine($"Part 2 (F#): {Day17.part2(input)}");
             }
             else if (day == 18)
             {
                 var input = Inputs.GetInput(18);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day18Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day18.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day18Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day18.part2(input)}");
             }
             else if (day == 19)
             {
                 var input = Inputs.GetInput(19);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day19Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day19.part1(input)}");
-                Console.WriteLine($"Part 2 (C#): {Program.Day19Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day19.part2(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day19Part2()}");
             }
             else if (day == 20)
             {
                 var input = Inputs.GetInput(20);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day20Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day20.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day20Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day20.part2(input)}");
             }
             else if (day == 21)
             {
                 var input = Inputs.GetInput(21);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day21Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day21.part1(input)}");
-                Console.WriteLine($"Part 2 (C#): {Program.Day21Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day21.part2(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day21Part2()}");
             }
             else if (day == 22)
             {
@@ -222,36 +193,27 @@ namespace AdventOfCode2018.CSharp
                 var target = (X: 11, Y: 718);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day22Part1(depth, target)}");
-//                Console.WriteLine($"Part 1 (F#): {Day22.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day22Part2(depth, target)}");
-//                Console.WriteLine($"Part 2 (F#): {Day22.part2(input)}");
             }
             else if (day == 23)
             {
                 var input = Inputs.GetInput(23);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day23Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day23.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day23Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day23.part2(input)}");
             }
             else if (day == 24)
             {
                 var input = Inputs.GetInput(24);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day24Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day24.part1(input)}");
                 Console.WriteLine($"Part 2 (C#): {Program.Day24Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day24.part2(input)}");
             }
             else if (day == 25)
             {
                 var input = Inputs.GetInput(25);
 
                 Console.WriteLine($"Part 1 (C#): {Program.Day25Part1(input)}");
-//                Console.WriteLine($"Part 1 (F#): {Day25.part1(input)}");
-//                Console.WriteLine($"Part 2 (C#): {Program.Day25Part2(input)}");
-//                Console.WriteLine($"Part 2 (F#): {Day25.part2(input)}");
             }
             else
             {
@@ -437,7 +399,7 @@ namespace AdventOfCode2018.CSharp
                 .PairWise()
                 .Where(p => p.Item1.Activity == "sleep")
                 .Select(pair => (
-                    Guard: pair.Item1.Guard,
+                    pair.Item1.Guard,
                     Day: pair.Item1.Timestamp.Hour == 23 ? pair.Item1.Timestamp.Day + 1 : pair.Item1.Timestamp.Day,
                     Start: pair.Item1.Timestamp.Hour == 0 ? pair.Item1.Timestamp.Minute : 0,
                     End: pair.Item2.Guard == pair.Item1.Guard && pair.Item2.Timestamp.Hour == 0 ? pair.Item2.Timestamp.Minute - 1 : 59
@@ -452,13 +414,13 @@ namespace AdventOfCode2018.CSharp
                 .Day4ParseGuardNaps(input)
                 .SelectMany(s => Enumerable.Range(s.Start, s.End - s.Start + 1)
                     .Select(m => (
-                        Guard: s.Guard,
+                        s.Guard,
                         Minute: m)
                     ))
                 .GroupBy(t => t)
                 .Select(g => (
-                    Guard: g.Key.Guard,
-                    Minute: g.Key.Minute,
+                    g.Key.Guard,
+                    g.Key.Minute,
                     Count: g.Count()
                 ))
                 .OrderByDescending(t => t.Count)
@@ -598,7 +560,7 @@ namespace AdventOfCode2018.CSharp
         private static (int? Distance, int? Index) Day6FindClosest(this (int X, int Y) pos, ImmutableArray<(int X, int Y, int Index)> possibilities)
         {
             return possibilities
-                .Select(thing => (Distance: Math.Abs(pos.X - thing.X) + Math.Abs(pos.Y - thing.Y), Index: thing.Index))
+                .Select(thing => (Distance: Math.Abs(pos.X - thing.X) + Math.Abs(pos.Y - thing.Y), thing.Index))
                 .OrderBy(t => t.Distance)
                 .PairWise()
                 .Select(t => t.Item1.Distance == t.Item2.Distance ? (default(int?), default(int?)) : (t.Item1.Distance, t.Item1.Index))
@@ -960,8 +922,8 @@ namespace AdventOfCode2018.CSharp
             var positions = Enumerable.Range(1, 300)
                 .SelectMany(x => Enumerable.Range(1, 300).Select(y => (X: x, Y: y)))
                 .Select(pos => (
-                    X: pos.X,
-                    Y: pos.Y,
+                    pos.X,
+                    pos.Y,
                     PowerLevel: Program.Day11GetPowerLevel(pos.X, pos.Y, gridSerialNumber)
                 ))
                 .ToImmutableArray();
@@ -1469,10 +1431,10 @@ namespace AdventOfCode2018.CSharp
             var enemyAdjacentSpaces = enemies
                 .SelectMany(e => new []
                 {
-                    (Row: e.Row + 1, Col: e.Col),
-                    (Row: e.Row - 1, Col: e.Col),
-                    (Row: e.Row, Col: e.Col + 1),
-                    (Row: e.Row, Col: e.Col - 1)
+                    (Row: e.Row + 1, e.Col),
+                    (Row: e.Row - 1, e.Col),
+                    (e.Row, Col: e.Col + 1),
+                    (e.Row, Col: e.Col - 1)
                 })
                 .Where(pos => (pos.Row == unit.Row && pos.Col == unit.Col) || pos.Row >= 0
                     && pos.Row < map.Length
@@ -1506,10 +1468,10 @@ namespace AdventOfCode2018.CSharp
             // attack if you can
             var adjacentEnemyWithLowestHitPoints = new []
                 {
-                    (Row: unit.Row + 1, Col: unit.Col),
-                    (Row: unit.Row - 1, Col: unit.Col),
-                    (Row: unit.Row, Col: unit.Col + 1),
-                    (Row: unit.Row, Col: unit.Col - 1)
+                    (Row: unit.Row + 1, unit.Col),
+                    (Row: unit.Row - 1, unit.Col),
+                    (unit.Row, Col: unit.Col + 1),
+                    (unit.Row, Col: unit.Col - 1)
                 }
                 .Where(pos => pos.Row >= 0
                     && pos.Row < map.Length
@@ -1541,7 +1503,7 @@ namespace AdventOfCode2018.CSharp
             var queue = new Queue<(int Row, int Col, (int Row, int Col) FirstStep, int Distance)>();
             if (unit.Row > 0)
             {
-                var step = (Row: unit.Row - 1, Col: unit.Col);
+                var step = (Row: unit.Row - 1, unit.Col);
                 if (map[step.Row][step.Col] == '.')
                 {
                     queue.Enqueue((step.Row, step.Col, step, 1));
@@ -1549,7 +1511,7 @@ namespace AdventOfCode2018.CSharp
             }
             if (unit.Col > 0)
             {
-                var step = (Row: unit.Row, Col: unit.Col - 1);
+                var step = (unit.Row, Col: unit.Col - 1);
                 if (map[step.Row][step.Col] == '.')
                 {
                     queue.Enqueue((step.Row, step.Col, step, 1));
@@ -1557,7 +1519,7 @@ namespace AdventOfCode2018.CSharp
             }
             if (unit.Col < map[0].Length - 1)
             {
-                var step = (Row: unit.Row, Col: unit.Col + 1);
+                var step = (unit.Row, Col: unit.Col + 1);
                 if (map[step.Row][step.Col] == '.')
                 {
                     queue.Enqueue((step.Row, step.Col, step, 1));
@@ -1565,7 +1527,7 @@ namespace AdventOfCode2018.CSharp
             }
             if (unit.Row < map.Length - 1)
             {
-                var step = (Row: unit.Row + 1, Col: unit.Col);
+                var step = (Row: unit.Row + 1, unit.Col);
                 if (map[step.Row][step.Col] == '.')
                 {
                     queue.Enqueue((step.Row, step.Col, step, 1));
@@ -1584,7 +1546,7 @@ namespace AdventOfCode2018.CSharp
 
                     if (next.Row > 0)
                     {
-                        var step = (Row: next.Row - 1, Col: next.Col);
+                        var step = (Row: next.Row - 1, next.Col);
                         if (map[step.Row][step.Col] == '.')
                         {
                             queue.Enqueue((step.Row, step.Col, next.FirstStep, next.Distance + 1));
@@ -1592,7 +1554,7 @@ namespace AdventOfCode2018.CSharp
                     }
                     if (next.Col > 0)
                     {
-                        var step = (Row: next.Row, Col: next.Col - 1);
+                        var step = (next.Row, Col: next.Col - 1);
                         if (map[step.Row][step.Col] == '.')
                         {
                             queue.Enqueue((step.Row, step.Col, next.FirstStep, next.Distance + 1));
@@ -1600,7 +1562,7 @@ namespace AdventOfCode2018.CSharp
                     }
                     if (next.Col < map[0].Length - 1)
                     {
-                        var step = (Row: next.Row, Col: next.Col + 1);
+                        var step = (next.Row, Col: next.Col + 1);
                         if (map[step.Row][step.Col] == '.')
                         {
                             queue.Enqueue((step.Row, step.Col, next.FirstStep, next.Distance + 1));
@@ -1608,7 +1570,7 @@ namespace AdventOfCode2018.CSharp
                     }
                     if (next.Row < map.Length - 1)
                     {
-                        var step = (Row: next.Row + 1, Col: next.Col);
+                        var step = (Row: next.Row + 1, next.Col);
                         if (map[step.Row][step.Col] == '.')
                         {
                             queue.Enqueue((step.Row, step.Col, next.FirstStep, next.Distance + 1));
@@ -1633,7 +1595,8 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        private static ImmutableArray<string> Day16PossibleInstructions = new[]
+        [SuppressMessage("ReSharper", "StringLiteralTypo")]
+        private static readonly ImmutableArray<string> Day16PossibleInstructions = new[]
         {
             "addr",
             "addi",
@@ -1704,6 +1667,7 @@ namespace AdventOfCode2018.CSharp
         }
 
 
+        [SuppressMessage("ReSharper", "StringLiteralTypo")]
         private static ImmutableDictionary<int, int> Day16ProcessOneInstruction(
             ImmutableDictionary<int, int> registers,
             string instruction,
@@ -1711,7 +1675,7 @@ namespace AdventOfCode2018.CSharp
             int b,
             int c)
         {
-            var result = 0;
+            int result;
             switch (instruction)
             {
                 case "addr":
@@ -2200,7 +2164,7 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        private static string Day19Part2(string input)
+        private static string Day19Part2()
         {
             // Day 19 Part 2 requires decompiling and optimizing the assembly instructions
 
@@ -2353,7 +2317,7 @@ namespace AdventOfCode2018.CSharp
         }
 
 
-        private static string Day21Part2(string input)
+        private static string Day21Part2()
         {
             // Day 21 Part 2 was solved by decompiling and optimizing the
             // assembly instructions to find the end condition.
@@ -2415,7 +2379,7 @@ namespace AdventOfCode2018.CSharp
                     { ((0, 0), 'T'), (0, (0, 0).Day22FindDistance(target), false) }
                 };
 
-            var ((location, equipment), costToLocation) = Program.Day22BestPossibility(target, possibilities);
+            var ((location, equipment), costToLocation) = Program.Day22BestPossibility(possibilities);
             while (location != target || equipment != 'T')
             {
                 var locationType = erosionLevel[location.Y, location.X] % 3;
@@ -2440,7 +2404,7 @@ namespace AdventOfCode2018.CSharp
                     possibilities[(location, 'T')] = (costToLocation + 7, costToLocation + 7, false);
                 }
 
-                ((location, equipment), costToLocation) = Program.Day22BestPossibility(target, possibilities);
+                ((location, equipment), costToLocation) = Program.Day22BestPossibility(possibilities);
             }
 
             return costToLocation;
@@ -2448,7 +2412,6 @@ namespace AdventOfCode2018.CSharp
 
 
         private static (((int X, int Y) Location, char Equipment) Position, int CostToHere) Day22BestPossibility(
-            (int X, int Y) target,
             Dictionary<((int X, int Y) Location, char Equipment), (int CostToHere, int TotalHeuristicCost, bool Processed)> possibilities)
         {
             var best = (Location: (X: -1, Y: -1), Equipment: '?');
@@ -2491,42 +2454,21 @@ namespace AdventOfCode2018.CSharp
             {
                 if (oldEquipment == 'N')
                 {
-                    if (oldLocationType == 1)
-                    {
-                        newEquipment = 'C';
-                    }
-                    else // 2
-                    {
-                        newEquipment = 'T';
-                    }
+                    newEquipment = oldLocationType == 1 ? 'C' : 'T';
                 }
             }
             else if (newLocationType == 1)
             {
                 if (oldEquipment == 'T')
                 {
-                    if (oldLocationType == 0)
-                    {
-                        newEquipment = 'C';
-                    }
-                    else // 2
-                    {
-                        newEquipment = 'N';
-                    }
+                    newEquipment = oldLocationType == 0 ? 'C' : 'N';
                 }
             }
             else if (newLocationType == 2)
             {
                 if (oldEquipment == 'C')
                 {
-                    if (oldLocationType == 0)
-                    {
-                        newEquipment = 'T';
-                    }
-                    else // 1
-                    {
-                        newEquipment = 'N';
-                    }
+                    newEquipment = oldLocationType == 0 ? 'T' : 'N';
                 }
             }
 

@@ -226,6 +226,15 @@ namespace AdventOfCode2018.CSharp
                 Console.WriteLine($"Part 2 (C#): {Program.Day22Part2(depth, target)}");
 //                Console.WriteLine($"Part 2 (F#): {Day22.part2(input)}");
             }
+            else if (day == 23)
+            {
+                var input = Inputs.GetInput(23);
+
+                Console.WriteLine($"Part 1 (C#): {Program.Day23Part1(input)}");
+//                Console.WriteLine($"Part 1 (F#): {Day23.part1(input)}");
+                Console.WriteLine($"Part 2 (C#): {Program.Day23Part2(input)}");
+//                Console.WriteLine($"Part 2 (F#): {Day23.part2(input)}");
+            }
             else if (day == 24)
             {
                 var input = Inputs.GetInput(24);
@@ -2536,6 +2545,98 @@ namespace AdventOfCode2018.CSharp
             {
                 possibilities.Add(newKey, (newCostToLocation, newHeuristicCost, false));
             }
+        }
+
+
+        private static int Day23Part1(string input)
+        {
+            var allNanobots = input
+                .SelectLines()
+                .Select(s =>
+                {
+                    var parts = s.Split(", r=");
+                    var posList = parts[0].Split("=")[1];
+                    var posList2 = posList.Substring(1, posList.Length - 2);
+                    var coordinates = posList2.Split(",").Select(int.Parse).ToImmutableArray();
+                    var radius = int.Parse(parts[1]);
+
+                    return (
+                        Position: (
+                            X: coordinates[0],
+                            Y: coordinates[1],
+                            Z: coordinates[2]),
+                        Radius: radius);
+                })
+                .ToImmutableArray();
+
+            var biggestNanobot = allNanobots
+                .OrderByDescending(n => n.Radius)
+                .First();
+
+            var nanobotsInRangeOfBiggest = allNanobots
+                .Count(n => n.Position.Day23ComputeDistance(biggestNanobot.Position) <= biggestNanobot.Radius);
+
+            return nanobotsInRangeOfBiggest;
+        }
+
+
+        private static int Day23ComputeDistance(this (int X, int Y, int Z) position1, (int X, int Y, int Z) position2)
+        {
+            return Math.Abs(position1.X - position2.X)
+                + Math.Abs(position1.Y - position2.Y)
+                + Math.Abs(position1.Z - position2.Z);
+        }
+
+
+        private static int Day23Part2(string input)
+        {
+            var allNanobots = input
+                .SelectLines()
+                .Select((s, i) =>
+                {
+                    var parts = s.Split(", r=");
+                    var posList = parts[0].Split("=")[1];
+                    var posList2 = posList.Substring(1, posList.Length - 2);
+                    var coordinates = posList2.Split(",").Select(int.Parse).ToImmutableArray();
+                    var radius = int.Parse(parts[1]);
+
+                    return (
+                        Id: i,
+                        Position: (
+                            X: coordinates[0],
+                            Y: coordinates[1],
+                            Z: coordinates[2]),
+                        Radius: radius);
+                })
+                .ToImmutableArray();
+
+            var nanobotDistances = allNanobots
+                .Select(t => (
+                    t.Id,
+                    DistanceMinimum: Math.Max(0, t.Position.Day23ComputeDistance((0, 0, 0)) - t.Radius),
+                    DistanceMaximum: t.Position.Day23ComputeDistance((0, 0, 0)) + t.Radius))
+                .ToImmutableArray();
+
+            // Note: this isn't a general solution, but I didn't feel like
+            // taking the time for a general solution after seeing that this
+            // one worked.
+            return nanobotDistances
+                .SelectMany(t => new[]
+                {
+                    (Distance: t.DistanceMinimum, Increase: true),
+                    (Distance: t.DistanceMaximum, Increase: false)
+                })
+                .OrderBy(t => t.Distance)
+                .ThenByDescending(t => t.Increase)
+                .Scan(
+                    (Distance: 0, Count: 0),
+                    (acc, next) => (
+                        next.Distance,
+                        Count: acc.Count + (next.Increase ? 1 : -1)))
+                .OrderByDescending(t => t.Count)
+                .ThenBy(t => t.Distance)
+                .First()
+                .Distance;
         }
 
 

@@ -9,7 +9,7 @@ namespace AdventOfCode2018.CSharp
 
         public static string GetInput(int day)
         {
-            return Inputs.GetDataFileText($"day{day}.txt");
+            return Inputs.GetDataFileText($"day{day:00}.txt");
         }
 
 

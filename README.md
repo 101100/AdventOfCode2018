@@ -23,6 +23,8 @@ To run the project:
 1. Install .NET Core.
 1. Download the code.
 1. Execute `dotnet build` to build the C# and F# projects
+1. Create a directory `inputs` and place your input file in that directory with
+   the format `dayXX.txt`, e.g. `day09.txt`.
 1. Execute `run <day>` (or `run.cmd <day>` on Windows).
 
 ## Other Years' Solutions
